@@ -1,0 +1,8 @@
+Name: CISA Alerts
+Field: cisa_alerts
+Pattern: ([AT]{2}[0-9]{2}[-][0-9]{3}[A-F])
+PatternArgs: 8
+Summary: Collect all CISA alerts for reference
+Status: enabled
+Reportfield: CISA Alerts
+MISPType: comment

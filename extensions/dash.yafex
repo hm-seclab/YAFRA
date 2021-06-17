@@ -1,0 +1,8 @@
+Name: DashCoins
+Field: dash_wallets
+Pattern: (X[1-9A-HJ-NP-Za-km-z]{33})
+PatternArgs: 0
+Summary: Find dash-wallet-address in a report. Source https://github.com/k4m4/dash-regex
+Status: enabled
+Reportfield: Dash Addresses
+MISPType: dash

@@ -1,0 +1,9 @@
+Name: Size in bytes
+Field: sizes_in_bytes
+Pattern: (([0-9]{1,})\s*(byte|bytes|Byte|Bytes))
+PatternArgs: 0
+Group: 1
+Summary: Find byte sizes like 8274 bytes in a report.
+Status: enabled
+Reportfield: Sizes given in bytes
+MISPType: size-in-bytes

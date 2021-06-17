@@ -1,0 +1,8 @@
+Name: Github-User
+Field: githubuseraccounts
+Pattern: ((http[s]?:\/\/)?(www.)?github.com\/[a-zA-Z0-9]{1,})
+PatternArgs: 0
+Summary: With this extension [https://www.]github.com/[User] can be extracted from an report.
+Status: enabled
+Reportfield: Githubaccounts
+MISPType: github-user

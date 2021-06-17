@@ -1,0 +1,14 @@
+# Files and directorys which should be ignored by docker-compose.
+ENV
+README.md
+.git
+.gitignore
+scripts
+.vscode
+.pylintrc
+
+testfiles
+
+# Local Dockerfiles.
+*/dockerfile
+*/Dockerfile

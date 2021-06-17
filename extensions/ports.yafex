@@ -1,0 +1,10 @@
+Name: Ports
+Field: ports
+Pattern: ((port|Port|PORT){1}\s*([1-9]{1}[0-9]{0,4}))
+PatternArgs: 0
+Group: 2
+Summary: Find all ports.
+Status: enabled
+Reportfield: Ports
+MISPType: port
+

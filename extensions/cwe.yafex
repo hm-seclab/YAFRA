@@ -1,0 +1,8 @@
+Name: CWE
+Field: cwe
+Pattern: (CWE-[0-9]{1,4})
+PatternArgs: 8
+Summary: Find CWE in reports and get a handle in misp.
+Status: enabled
+Reportfield: Common weakness enumeration (CWE)
+MISPType: weakness

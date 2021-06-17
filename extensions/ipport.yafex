@@ -1,0 +1,8 @@
+Name: IP and Port
+Field: ip_port_comb
+Pattern: (([0-9]{1,4}[.]{1}){3}([0-9]{1,4}){1}:{1}[0-9]{1,5})
+PatternArgs: 0
+Summary: Find all ips which also have a port at the end like 127.0.0.1:80.
+Status: enabled
+Reportfield: IPv4 and Ports
+MISPType: ip-src|port

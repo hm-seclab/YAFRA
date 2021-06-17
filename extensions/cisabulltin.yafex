@@ -1,0 +1,8 @@
+Name: CISA Bulletin
+Field: cisabulletin
+Pattern: (SB[0-9]{2}[-][0-9]{3})
+PatternArgs: 8
+Summary: Find CISA bulletin numbers in a report.
+Status: enabled
+Reportfield: CISA Bulletin
+MISPType: comment

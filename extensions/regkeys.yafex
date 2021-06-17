@@ -1,0 +1,8 @@
+Name: Registry
+Field: registry_keys
+Pattern: ((HKLM|HKCU|HKEY_CURRENT_USER)\\{1}([ a-zA-Z0-9_\\=\",@:;#~\*‘’]*){1,})
+PatternArgs: 0
+Summary: Find Registry entrys and value setter.
+Status: enabled
+Reportfield: Windows Registry
+MISPType: regkey

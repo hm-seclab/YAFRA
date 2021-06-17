@@ -1,0 +1,8 @@
+Name: Mimetypes
+Field: mimetypes
+Pattern: ((application|audio|image|multipart|text|example|message|model|video|chemical){1}\/([a-zA-Z0-9-]*[.]?)*)
+PatternArgs: 8
+Summary: Search for MimeTypes in reports.
+Status: enabled
+Reportfield: Mimetypes
+MISPType: mime-type

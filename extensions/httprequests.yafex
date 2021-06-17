@@ -1,0 +1,8 @@
+Name: HTTP-Requests
+Field: httprequests
+Pattern: ((GET|POST|PATCH|HEAD|PUT|CONNECT|OPTIONS|TRACE|DELETE){1}\s*/{1}([0-9a-zA-Z<>\-./]*[ ]{0,5})*)
+PatternArgs: 8
+Summary: With this extension request like POST /etc/just.js
+Status: enabled
+Reportfield: HTTP Requests
+MISPType: http-request

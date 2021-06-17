@@ -1,0 +1,8 @@
+Name: Onion Domains
+Field: oniondomains
+Pattern: ((http[s]?:\/\/)?(www.)?([a-zA-Z0-9]{1,})[.]{1}(onion){1})
+PatternArgs: 8
+Summary: Collect all onion-domains
+Status: enabled
+Reportfield: Onion domains
+MISPType: domain

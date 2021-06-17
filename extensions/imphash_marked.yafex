@@ -1,0 +1,9 @@
+Name: imphash
+Field: imphash_ext
+Pattern: ((imphash|IMPHASH)[:]{1}\s*([a-zA-Z0-9]{32}))
+PatternArgs: 0
+Group: 2
+Summary: Find imphash with the following pattern imphash [hash] in a report.
+Status: enabled
+Reportfield: Marked imphashes
+MISPType: imphash

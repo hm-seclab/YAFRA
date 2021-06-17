@@ -1,0 +1,10 @@
+Name: [name]
+Field: [name_in_json]
+Pattern: [pattern]
+PatternArgs: [0] 
+Group: [0]
+Hidden: False
+Summary: [Description]
+Status: enabled/disabled
+Reportfield: [Name in the Report]
+MISPType: [misp_type]

@@ -1,0 +1,8 @@
+Name: Github-Repos
+Field: githubrepos
+Pattern: ((http[s]?:\/\/)?(www.)?github.com\/[a-zA-Z0-9]*\/[a-zA-Z0-9_-]*)
+PatternArgs: 0
+Summary: With this extension [https://www.]github.com/[User]/[Repo] can be extracted from an report.
+Status: enabled
+Reportfield: Githubrepositorys
+MISPType: github-repository

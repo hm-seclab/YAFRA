@@ -1,0 +1,8 @@
+Name: CISA MAR ID's
+Field: cisa_mar
+Pattern: ((MAR|MIFR)-[0-9]{8}(-[0-9]{1}){0,1}(.r[0-9]{1}){0,1}.v[0-9]{1}([.]{1}[0-9a-zA-Z]*){0,1})
+PatternArgs: 0
+Summary: Extract CISA-Mar IDs.
+Status: enabled
+Reportfield: CISA Malware Analysis Report (MAR)
+MISPType: comment

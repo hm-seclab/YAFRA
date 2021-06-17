@@ -1,0 +1,8 @@
+Name: Dogecoin
+Field: dogecoin_wallets
+Pattern: (D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32})
+PatternArgs: 0
+Summary: Find Dogecoin-wallet-address in a report. Source https://github.com/k4m4/dogecoin-regex
+Status: enabled
+Reportfield: Dogecoin Addresses
+MISPType: comment

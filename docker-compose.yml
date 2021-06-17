@@ -1,0 +1,117 @@
+version: "3.4"
+x-common-variables: &common-variables
+    LOGGER_TOPIC: "logging"
+    HEALTH_TOPIC: "health_report"
+    IOC_TOPIC: "ioc"
+    REPORT_TOPIC: "rfreport"
+    KAFKA_SERVER: "{YOUR_IP}:9092"
+    SYS_VERSION: "0.1.1"
+    PYTHONUNBUFFERED: 1
+x-common-variables: &GITLAB
+    GITLAB_SERVER: "http://{YOUR_IP}:10080"
+    GITLAB_TOKEN: "{YOUR_GITLAB_TOKEN}"
+    GITLAB_REPO_NAME: "{YOUR_REPONAME}"
+x-common-variables: &APIKEYS
+    VIRUS_TOTAL: "" 
+x-common-variables: &MISP
+    MISP_SERVER: "https://{YOUR_IP}:443"
+    MISP_TOKEN: "{YOUR_MISP_TOKEN}"
+    MISP_VERIF: "False"
+x-common-variables: &NEO4J
+    NEO_SERVER: "http://{YOUR_IP}:7474"
+    NEO_USER: "neo4j"
+    NEO_PASSWORD: "{YOUR_PASSWORD}"
+services:
+    zookeeper:
+        image: wurstmeister/zookeeper
+        container_name: zookeeper
+        ports: 
+            - "2181:2181"
+    kafka:
+        image: wurstmeister/kafka
+        container_name: kafka
+        ports:
+            - "9092:9092"
+        environment: 
+            KAFKA_ADVERTISED_HOST_NAME: {YOUR_IP}
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    sysmon:
+        build:
+            context: .
+            dockerfile: sysmanamon/Dockerfile
+        container_name: systemmonitor
+        ports:
+            - "8080:8079"
+        environment:
+            <<: *common-variables
+            SERVER_ADDRESS: 0.0.0.0
+            SERVER_PORT: 8079
+            SERVICENAME: "SysMon"
+    extractor:
+        build:
+            context: .
+            dockerfile: iocextractor/Dockerfile
+        container_name: iocextractor
+        ports:
+            - "8081:8081"
+        volumes:
+            - type: bind
+              source: {YOUR_LOCAL_DIR}
+              target: /app/iocextractor/reports
+        environment: 
+            <<: *common-variables
+            <<: *GITLAB
+            SERVICENAME: "Extractor"
+    pusher:
+        build:
+            context: .
+            dockerfile: iocpusher/Dockerfile
+        container_name: iocpusher
+        ports:
+            - "8082:8082"
+        environment: 
+            <<: *common-variables
+            <<: *GITLAB
+            <<: *APIKEYS
+            <<: *MISP
+            <<: *NEO4J
+            SERVICENAME: "Pusher"
+    puller:
+        build:
+            context: .
+            dockerfile: iocpuller/Dockerfile
+        container_name: iocpuller
+        ports:
+            - "8083:8083"
+        environment: 
+            <<: *common-variables
+            <<: *GITLAB
+            TIMESTAMP_TOPIC: "committstamps"
+            SERVICENAME: "Puller"
+    reporter:
+        build:
+            context: .
+            dockerfile: iocreporter/Dockerfile
+        container_name: iocreporter
+        ports:
+            - "8084:8084"
+        environment: 
+            <<: *common-variables
+            <<: *MISP
+            SERVICENAME: "Reporter"
+    neo4j:
+        image: neo4j:3.5
+        restart: unless-stopped
+        ports:
+            - 7474:7474
+            - 7687:7687
+        volumes:
+            - {YOUR_LOCAL_DIR}/conf:/conf
+            - {YOUR_LOCAL_DIR}/data:/data
+            - {YOUR_LOCAL_DIR}/import:/import
+            - {YOUR_LOCAL_DIR}/logs:/logs
+            - {YOUR_LOCAL_DIR}/plugins:/plugins
+        environment: 
+            - NEO4J_dbms_memory_pagecache_size=1G
+            - NEO4J_dbms.memory.heap.initial_size=1G
+            - NEO4J_dbms_memory_heap_max__size=1G

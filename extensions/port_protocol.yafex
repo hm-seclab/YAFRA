@@ -1,0 +1,8 @@
+Name: Ports and Protocals
+Field: port_protocal_combi
+Pattern: ([0-9]{1,5}\s*/\s*(TCP|UDP|SCTP|DCCP|SPX))
+PatternArgs: 0
+Summary: Find all ports with its layer 4 protocal like 80/TCP.
+Status: enabled
+Reportfield: Ports and Protocals
+MISPType: comment

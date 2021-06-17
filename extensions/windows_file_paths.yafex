@@ -1,0 +1,9 @@
+Name: Windows File Path Addition
+Field: file_paths
+Pattern: ((([a-zA-Z]:|%[a-zA-Z0-9%]*)\\([ a-zA-Z0-9\\_\'#+.~&%$§\/"\(\)\[\]]*){0,}))
+PatternArgs: 0
+Summary: This extension is just an addition to the exisiting windows file path component in YAFRA.
+Status: enabled
+Reportfield: none
+MISPType: none
+Hidden: True

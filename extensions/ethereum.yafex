@@ -1,0 +1,8 @@
+Name: Ethereum
+Field: ethereum_wallets
+Pattern: (0x[a-fA-F0-9]{40})
+PatternArgs: 0
+Summary: Find Ethereum-wallet-address in a report. Source https://github.com/k4m4/ethereum-regex
+Status: enabled
+Reportfield: Ethereum Addresses
+MISPType: comment
