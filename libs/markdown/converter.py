@@ -20,6 +20,7 @@ rules = [
 rules_after = [
     ("\n", ""),
     ("- ", ""),
+    (" - ", "")
 ]
 
 re_rules = [

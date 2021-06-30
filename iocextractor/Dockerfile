@@ -8,6 +8,7 @@ ADD ./iocextractor ./iocextractor
 ADD ./libs ./libs
 ADD ./extensions ./extensions
 WORKDIR /app/iocextractor
+RUN mkdir /app/iocextractor/reports
 
 EXPOSE 8081
 

@@ -75,7 +75,7 @@ def get_branch_name():
     @return a string with the name of the daily branch. In the
         format: IoC-04.04.2021
     '''
-    return "IoC-{}".format(datetime.today().strftime('%d-%m-%Y'))
+    return "IoC-{}".format(datetime.today().strftime('%m-%Y'))
 
 def get_project_handle(gitlabserver, token, repository, servicename):
     '''
@@ -95,9 +95,9 @@ def get_project_handle(gitlabserver, token, repository, servicename):
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
     return gprojects
 
-def create_dailybranch_if_not_exists(gitlabserver, token, repository, servicename):
+def create_monthly_if_not_exists(gitlabserver, token, repository, servicename):
     '''
-    create_dailybranch_if_not_exists will create a daily branch for the icos.
+    create_monthly_if_not_exists will create a monthly branch for the icos.
     @param gitlabserver will be the hostname of the gitlabserver.
     @param token will be the personal-access-token for gitlab.
     @param repository will be the name repository where the branch should be created in.
@@ -109,6 +109,6 @@ def create_dailybranch_if_not_exists(gitlabserver, token, repository, servicenam
         if not branch_name in [branch.name for branch in gprojects.branches.list()]:
             gprojects.branches.create({'branch': branch_name, 'ref': 'master'})
         else:
-            LogMessage("Dailybranch already exists", LogMessage.LogTyp.INFO, servicename).log()
+            LogMessage("Monthlybranch already exists", LogMessage.LogTyp.INFO, servicename).log()
     except Exception as error:
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()

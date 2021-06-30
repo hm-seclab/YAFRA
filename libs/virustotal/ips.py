@@ -23,7 +23,7 @@ def get_vt_information_ipv4(vt_api_key, ips, servicename):
     information = {}
     try:
         for target in ips:
-            country, hosts, detected_files, undetected_files = None, [], 0, 0
+            country, hosts, detected_files, undetected_files, asn = None, [], 0, 0, None
             if vt_api_key != "":
                 response = requests.get(VT_IP_ENDPOINT.format(vt_api_key, target))
                 if response.status_code == 204:
@@ -44,11 +44,14 @@ def get_vt_information_ipv4(vt_api_key, ips, servicename):
                         detected_files = det_files[0]
                     if 'undetected_downloaded_samples' in keys and  (undet_files := [entry['total'] for entry in json_response['undetected_downloaded_samples']]) is not None and len(undet_files) > 0:
                         undetected_files = undet_files[0]
+                    if 'asn' in keys:
+                        asn = json_response['asn']
             information[target] = {
                 "Country": country,
                 "Hosts": hosts,
                 "Detected_files": detected_files,
-                "Undetected_files": undetected_files
+                "Undetected_files": undetected_files,
+                "ASN": asn
             }
     except Exception as error:
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()

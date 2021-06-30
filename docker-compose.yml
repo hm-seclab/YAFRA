@@ -41,11 +41,11 @@ services:
             dockerfile: sysmanamon/Dockerfile
         container_name: systemmonitor
         ports:
-            - "8080:8079"
+            - "8080:8080"
         environment:
             <<: *common-variables
             SERVER_ADDRESS: 0.0.0.0
-            SERVER_PORT: 8079
+            SERVER_PORT: 8080
             SERVICENAME: "SysMon"
     extractor:
         build:
@@ -54,14 +54,31 @@ services:
         container_name: iocextractor
         ports:
             - "8081:8081"
-        volumes:
-            - type: bind
-              source: {YOUR_LOCAL_DIR}
-              target: /app/iocextractor/reports
         environment: 
             <<: *common-variables
             <<: *GITLAB
             SERVICENAME: "Extractor"
+    analyser:
+        build:
+            context: .
+            dockerfile: analyser/Dockerfile
+        container_name: analyser
+        ports:
+            - "8085:8085"
+        environment: 
+            <<: *common-variables
+            <<: *MISP
+        SERVICENAME: "Analyser"
+    scraper:
+        build:
+            context: .
+            dockerfile: scraper/Dockerfile
+        container_name: scraper
+        ports:
+            - "8086:8086"
+        environment: 
+            <<: *common-variables
+        SERVICENAME: "Scraper"
     pusher:
         build:
             context: .

@@ -370,16 +370,17 @@ def generate_n_ipv4_section(markdownfile, findings, servicename):
     try:
         if 'ipv4' in findings.keys() and len(findings['ipv4']) > 0:
             markdownfile.new_header(level=3, title='IPv4-Address')
-            fields = ["IP", "Country", "Detected files", "Undetected files", "Related Events"]
+            fields = ["IP", "Country", "ASN", "Detected files", "Undetected files", "Related Events"]
             n_colums = len(fields)
             n_rows = len(findings['ipv4']) + 1
             for entry in findings['ipv4']:
                 fields.extend([
                     str(entry),
                     convert_alpha_2_to_alpha_3(str(findings['ipv4'][entry]['Country']), servicename),
+                    str(findings['ipv4'][entry]['ASN']) if findings['ipv4'][entry]['ASN'] is not None else "#",
                     str(findings['ipv4'][entry]['Detected_files']),
                     str(findings['ipv4'][entry]['Undetected_files']),
-                    str(findings['ipv4'][entry]['misp']) if len(findings['ipv4'][entry]['misp']) > 0 else "-",
+                    str(findings['ipv4'][entry]['misp']) if len(findings['ipv4'][entry]['misp']) > 0 else "#",
                 ])
             markdownfile.new_line()
             markdownfile.new_table(columns=n_colums, rows=n_rows, text=fields, text_align='center')
@@ -429,7 +430,7 @@ def generate_n_domains_section(markdownfile, findings, servicename):
                     str(findings['domains'][entry]['Vendor']),
                     str(findings['domains'][entry]['Detected_files']),
                     str(findings['domains'][entry]['Undetected_files']),
-                    str(findings['domains'][entry]['misp']) if len(findings['domains'][entry]['misp']) > 0 else "-",
+                    str(findings['domains'][entry]['misp']) if len(findings['domains'][entry]['misp']) > 0 else "#",
                 ])
             markdownfile.new_line()
             markdownfile.new_table(columns=n_colums, rows=n_rows, text=fields, text_align='center')
@@ -468,7 +469,7 @@ def generate_n_url_section(markdownfile, findings, servicename):
             for entry in findings['urls']:
                 fields.extend([
                     str(entry['url']),
-                    str(findings['urls'][entry]['misp']) if len(findings['urls'][entry]['misp']) > 0 else "-",
+                    str(entry['misp']) if entry['misp'] != "" else "#",
                 ])
             markdownfile.new_line()
             markdownfile.new_table(columns=n_colums, rows=n_rows, text=fields, text_align='center')
@@ -529,7 +530,7 @@ def generate_cve_section(markdownfile, findings, servicename):
                         str(findings['cve'][entry]['CVS-Score']),
                         str(findings['cve'][entry]['Complexity']),
                         str(findings['cve'][entry]['Vektor']),
-                        str(findings['cve'][entry]['misp']) if len(findings['cve'][entry]['misp']) > 0 else "-",
+                        str(findings['cve'][entry]['misp']) if len(findings['cve'][entry]['misp']) > 0 else "#",
                     ])
                 markdownfile.new_table(columns=5, rows=2, text=fields, text_align='center')
                 markdownfile.new_line()
@@ -619,7 +620,7 @@ def generate_overview_table(markdownfile, findings, extensionnames, servicename)
         f_keys = findings.keys()
         ext = list(filter(lambda x: x != False, [(k in findings.keys() and len(findings[k]) > 0) for k in extensionnames.keys()]))
         table = [
-            str(findings['tlp_labels'][0]) if 'tlp_labels' in f_keys and len(findings['tlp_labels']) > 0 else "-",
+            str(findings['tlp_labels'][0]) if 'tlp_labels' in f_keys and len(findings['tlp_labels']) > 0 else "#",
             str(len(findings['ipv4'])) if 'ipv4' in f_keys and len(findings['ipv4']) > 0 else "0",
             str(len(findings['domains'])) if 'domains' in f_keys and len(findings['domains']) > 0 else "0",
             str(len(findings['email_addresses'])) if 'email_addresses' in f_keys and len(findings['email_addresses']) > 0 else "0",
@@ -795,7 +796,7 @@ def generate_simple_table(markdownfile, findings, findings_key, object_key, tabl
         for entry in findings[findings_key]:
             fields.extend([
                         str(entry[object_key]),
-                        str(entry['misp']) if len(entry['misp']) > 0 else "-"
+                        str(entry['misp']) if len(entry['misp']) > 0 else "#"
                     ])
         markdownfile.new_line()
         markdownfile.new_table(columns=n_colums, rows=n_rows, text=fields, text_align='center')

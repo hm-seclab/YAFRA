@@ -104,7 +104,9 @@
         "www.mcafee.com",
         "www.metasploit.com",
         "www.yahoo.com",
-        "www.ic3.gov"
+        "www.ic3.gov",
+        "publicintelligence.net",
+        "rss_feed1_from_publicintelligence.net"
     ],
     "mimetypes": [], 
     "githubrepos": [], 
@@ -206,7 +208,9 @@
         "10.4.0.2",
         "10.5.1.0",
         "10.5.2.0",
-        "10.6.0.0"
+        "10.6.0.0",
+        "10.10.1.11",
+        "10.10.1.12"
     ], 
     "ipv6s": [
         "::1"

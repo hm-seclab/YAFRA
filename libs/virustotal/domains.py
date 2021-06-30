@@ -51,7 +51,7 @@ def get_vt_information_domains(vt_api_key, domains, servicename):
                 if 'domain_siblings' in keys and (sibblings := json_response['domain_siblings']) is not None and len(sibblings) > 0:
                     sibbling_domains = sibblings
                 for cat in av_cats:
-                    if cat in keys and (categories := json_response[cat]) is not None and categories not in forbidden_cats and domain_categories is None:
+                    if cat in keys and (categories := json_response[cat]) is not None and categories not in forbidden_cats and domain_categories == "Unknown":
                         domain_categories, vendor = categories, cat
                 if domain_categories is None and 'sophos category' in keys and (categories := json_response['sophos category']) is not None:
                     domain_categories = categories

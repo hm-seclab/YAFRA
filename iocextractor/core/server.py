@@ -4,6 +4,7 @@ Server-Class for the extractions of IoC's.
 
 # pylint: disable=C0413, C0411
 
+from logging import debug
 import os
 import sys
 import json
@@ -27,8 +28,11 @@ from pdfminer.pdfparser import PDFParser
 from ioc_finder import find_iocs
 
 from flask import Flask
+from flask import request
+from flask import render_template
 from flask_script import Server
 from flask_apscheduler import APScheduler
+from flask_dropzone import Dropzone
 
 from libs.core.filter import filter_dict_values
 from libs.core.filter import filter_by_blacklist
@@ -57,8 +61,15 @@ class Config:
     '''
     SCHEDULER_API_ENABLED = True
 
-app = Flask(SERVICENAME, template_folder='core/templates')
+app = Flask(SERVICENAME, template_folder='templates', static_folder="static/", static_url_path='/static')
 app.config.from_object(Config())
+app.config['DROPZONE_ALLOWED_FILE_CUSTOM'] = True
+app.config['DROPZONE_ALLOWED_FILE_TYPE']='.pdf'
+app.config['DROPZONE_MAX_FILE_SIZE'] = 10
+app.config['DROPZONE_MAX_FILES'] = 100
+app.config['UPLOADED_PATH'] = os.path.join(DOCKER_REPORTS_PATH, 'uploads')
+
+dropzone = Dropzone(app)
 
 scheduler = APScheduler()
 scheduler.init_app(app)
@@ -78,10 +89,18 @@ class Extractor(Server):
     EXTENSIONS = load_extensions(SERVICENAME)
     BLACKLIST = {}
 
-    @scheduler.task("interval", id="refetch", seconds=5, timezone=pytz.UTC)
+    @app.route('/', methods=['GET', 'POST'])
+    def file_dropzone():
+        if request.method == 'POST':
+            files = request.files.get('file')
+            file_path = os.path.join(DOCKER_REPORTS_PATH, files.filename)
+            files.save(file_path)
+        return render_template('index.html')
+
+    @scheduler.task("interval", id="refetch", seconds=30, timezone=pytz.UTC)
     def refetch_blacklist():
         '''
-        refetch_blacklist will fetch the blacklist from the master every 10 minutes.
+        refetch_blacklist will fetch the blacklist from the master every 30 minutes.
         '''
         content = {}
         try:

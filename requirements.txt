@@ -10,6 +10,7 @@ Deprecated==1.2.12
 fire==0.3.1
 Flask==1.1.2
 Flask-APScheduler==1.12.1
+Flask-Dropzone==1.6.0
 Flask-Script==2.0.6
 idna==2.10
 ioc-fanger==3.2.3

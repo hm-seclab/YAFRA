@@ -17,7 +17,7 @@ from libs.core.environment import envvar
 from libs.kafka.logging import LogMessage
 from libs.kafka.logging import send_health_message
 from libs.gitlabl.repository import create_repository_if_not_exists
-from libs.gitlabl.repository import create_dailybranch_if_not_exists
+from libs.gitlabl.repository import create_monthly_if_not_exists
 from libs.gitlabl.repository import get_branch_name
 from libs.gitlabl.repository import get_projectid_by_name
 from libs.gitlabl.issues import create_issues
@@ -226,14 +226,14 @@ class Pusher(Server):
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
         return data
 
-    @scheduler.task("cron", id="execute", day_of_week='*', timezone=pytz.UTC)
-    def create_daily_branch():
+    @scheduler.task("cron", id="execute", year='*', month='*', timezone=pytz.UTC)
+    def create_monthly_branch():
         '''
-        create_daily_branch will create everyday a new branch
-            in the format IoC-[CurrentDate].
+        create_monthly_branch will create everyday a new branch
+            in the format IoC-[CurrentMonth]-[CurrentYear].
         '''
         try:
-            create_dailybranch_if_not_exists(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, servicename=SERVICENAME)
+            create_monthly_if_not_exists(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, servicename=SERVICENAME)
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
@@ -285,6 +285,6 @@ class Pusher(Server):
         attack.update()
         create_repository_if_not_exists(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, servicename=SERVICENAME)
         Thread(target=Pusher.consume_findings, daemon=True).start()
-        Pusher.create_daily_branch()
+        Pusher.create_monthly_branch()
         scheduler.start()
         return Server.__call__(self, app, *args, **kwargs)
