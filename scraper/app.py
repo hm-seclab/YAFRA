@@ -1,5 +1,5 @@
 '''
-Server for the ioc-extractor service.
+Server for the scraper service.
 '''
 
 from core.server import Extractor
