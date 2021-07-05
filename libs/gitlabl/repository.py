@@ -32,28 +32,51 @@ def create_repository_if_not_exists(gitlabserver, token, repository, servicename
                 with open(os.path.abspath("../datasets/blacklist.json")) as file:
                     gprojects.commits.create({
                         'branch': 'master',
-                        'commit_message': 'inital commit',
+                        'commit_message': 'initial commit',
                         'actions': [
                             {
                                 'action': 'create',
                                 'file_path': 'blacklist.json',
                                 'content': json.dumps(json.load(file), indent=4, sort_keys=True),
                             }]
-                        })
+                    })
                 if 'README.md' in [gprojects.repository_tree(branch='master')]:
                     gprojects.commits.create({
                         'branch': 'master',
-                        'commit_message': 'inital commit',
+                        'commit_message': 'initial commit',
                         'actions': [{
-                                'action': 'delete',
-                                'file_path': 'README.md',
-                            }]
-                        })
+                            'action': 'delete',
+                            'file_path': 'README.md',
+                        }]
+                    })
                 gprojects.labels.create({'name': 'Ready', 'color': '#00cc66'})
+
+                __create_datasources_in_repository(gprojects)
         else:
             LogMessage("Repository already exists", LogMessage.LogTyp.WARNING, servicename).log()
     except Exception as error:
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
+
+
+def __create_datasources_in_repository(gprojects):
+    '''
+    __create_datasources_in_repository will create new datasources
+    in json format within a given gitlab repository.
+    @param gprojects will be the gitlab project
+    '''
+    with open(os.path.abspath("../datasets/sources.json")) as file:
+        gprojects.commits.create({
+            'branch': 'master',
+            'commit_message': 'initial commit',
+            'actions': [
+                {
+                    'action': 'create',
+                    'file_path': 'api_sources.json',
+                    'content': json.dumps(json.load(file), indent=4, sort_keys=True),
+                }
+            ]
+        })
+
 
 def get_projectid_by_name(gitlabinstance, projectname, servicename):
     '''
@@ -69,6 +92,7 @@ def get_projectid_by_name(gitlabinstance, projectname, servicename):
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
         return None
 
+
 def get_branch_name():
     '''
     get_branch_name will return the name of the daily branch.
@@ -76,6 +100,7 @@ def get_branch_name():
         format: IoC-04.04.2021
     '''
     return "IoC-{}".format(datetime.today().strftime('%m-%Y'))
+
 
 def get_project_handle(gitlabserver, token, repository, servicename):
     '''
@@ -95,6 +120,7 @@ def get_project_handle(gitlabserver, token, repository, servicename):
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
     return gprojects
 
+
 def create_monthly_if_not_exists(gitlabserver, token, repository, servicename):
     '''
     create_monthly_if_not_exists will create a monthly branch for the icos.
@@ -105,7 +131,7 @@ def create_monthly_if_not_exists(gitlabserver, token, repository, servicename):
     '''
     try:
         branch_name = get_branch_name()
-        gprojects = gprojects = get_project_handle(gitlabserver, token, repository, servicename)
+        gprojects = get_project_handle(gitlabserver, token, repository, servicename)
         if not branch_name in [branch.name for branch in gprojects.branches.list()]:
             gprojects.branches.create({'branch': branch_name, 'ref': 'master'})
         else:
