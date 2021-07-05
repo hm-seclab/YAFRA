@@ -13,6 +13,7 @@ x-common-variables: &GITLAB
     GITLAB_REPO_NAME: "${YOUR_REPONAME}"
 x-common-variables: &APIKEYS
     VIRUS_TOTAL: "${YOUR_VT_TOKEN}"
+    LEAKIX: "${LEAKIX_API_KEY}"
 x-common-variables: &MISP
     MISP_SERVER: "https://${YOUR_IP}:443"
     MISP_TOKEN: "${YOUR_MISP_TOKEN}"
@@ -21,6 +22,11 @@ x-common-variables: &NEO4J
     NEO_SERVER: "http://${YOUR_IP}:7474"
     NEO_USER: "neo4j"
     NEO_PASSWORD: "${YOUR_PASSWORD}"
+x-common-variables: &TWITTER
+    TWITTER_CONSUMER_KEY: "${TWITTER_CONSUMER_KEY}"
+    TWITTER_CONSUMER_KEY_SECRET: "${TWITTER_CONSUMER_KEY_SECRET}"
+    TWITTER_ACCESS_TOKEN: "${TWITTER_ACCESS_TOKEN}"
+    TWITTER_ACCESS_TOKEN_SECRET: "${TWITTER_ACCESS_TOKEN_SECRET}"
 services:
     zookeeper:
         image: wurstmeister/zookeeper
@@ -78,6 +84,8 @@ services:
             - "8086:8086"
         environment: 
             <<: *common-variables
+            <<: *APIKEYS
+            <<: *TWITTER
             SERVICENAME: "Scraper"
     pusher:
         build:

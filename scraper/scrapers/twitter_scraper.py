@@ -1,19 +1,21 @@
 import tweepy
-import os
-from dotenv import load_dotenv
 
 from libs.core.environment import envvar
 from libs.kafka.logging import LogMessage
-
-load_dotenv()
 
 '''
 Class to get tweets for a list of given users.
 Stores the output in a list for further use.
 '''
 SERVICENAME = envvar("SERVICENAME", "TwitterScraper")
-auth = tweepy.OAuthHandler(os.environ.get('TWITTER_CONSUMER_KEY'), os.environ.get('TWITTER_CONSUMER_KEY_SECRET'))
-auth.set_access_token(os.environ.get('TWITTER_ACCESS_TOKEN'), os.environ.get('TWITTER_ACCESS_TOKEN_SECRET'))
+TWITTER_CONSUMER_KEY = envvar("TWITTER_CONSUMER_KEY", "None")
+TWITTER_CONSUMER_KEY_SECRET = envvar("TWITTER_CONSUMER_KEY_SECRET", "None")
+TWITTER_ACCESS_TOKEN = envvar("TWITTER_ACCESS_TOKEN", "None")
+TWITTER_ACCESS_TOKEN_SECRET = envvar("TWITTER_ACCESS_TOKEN_SECRET", "None")
+TWEET_COUNT = envvar("TWEET_COUNT", "None")
+
+auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_KEY_SECRET)
+auth.set_access_token(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET)
 
 api = tweepy.API(auth)
 
@@ -35,7 +37,7 @@ class TwitterScraper:
                                        tweet_mode='extended'
                                        )
             # gets the latest 300 tweets
-            for info in tweets[:int(os.environ.get('TWEET_COUNT'))]:
+            for info in tweets[:int(TWEET_COUNT)]:
                 if info is not None:
                     twitter_feed_list.append(info)
 

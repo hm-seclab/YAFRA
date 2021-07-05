@@ -1,5 +1,4 @@
 import json
-import os
 
 import requests
 from bs4 import BeautifulSoup
@@ -15,6 +14,7 @@ Note -> We have to write the logic for each API different.
 
 SERVICENAME = envvar("SERVICENAME", "ApiScraper")
 path_to_csv = 'resources/rss_sources.csv'
+LEAKIX_API_KEY = envvar("LEAKIX", "None")
 
 
 class ApiScraper:
@@ -57,7 +57,7 @@ class ApiScraper:
         elif "leakix" in url:
             try:
                 headers = {
-                    "api-key": os.environ.get('LEAKIX_API_KEY'),
+                    "api-key": LEAKIX_API_KEY,
                     "Accept": "application/json"
                 }
 
