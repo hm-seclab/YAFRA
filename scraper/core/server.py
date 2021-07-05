@@ -286,7 +286,7 @@ class Scraper(Server):
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
-    @scheduler.task("interval", id="refetch", seconds=30, timezone=pytz.UTC)
+    @scheduler.task("interval", id="refetch", day_of_week='mon-sun', hour=3, timezone=pytz.UTC)
     def refetch_sources():
         '''
         __refetch_sources will fetch the relevant sources to scrape from master every 30 seconds.
