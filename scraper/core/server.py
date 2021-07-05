@@ -11,6 +11,7 @@ from threading import Thread
 import pytz
 from kafka import KafkaProducer
 
+from libs.gitlabl.files import read_file_from_gitlab
 from libs.kafka.topichandler import create_topic_if_not_exists
 from scraper.core.static.DataObject import DataObject
 from scraper.scrapers.api_scraper import ApiScraper
@@ -34,12 +35,9 @@ HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
 MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0")
 MISP_TOKEN = envvar("MISP_TOKEN", None)
 MISP_CERT_VERIFY = True if envvar("MISP_VERIF", True) == "True" else False
-
-CSV_BASE_PATH = '../scrapers/resources/'
-
-RSS_FEED_CSV_PATH = CSV_BASE_PATH + 'rss_sources.csv'
-TWITTER_FEED_CSV_PATH = CSV_BASE_PATH + 'twitter_sources.csv'
-API_CSV_PATH = CSV_BASE_PATH + 'api_sources.csv'
+GITLAB_SERVER = envvar("GITLAB_SERVER", "0.0.0.0:10082")
+GITLAB_TOKEN = envvar("GITLAB_TOKEN", "NOTWORKING")
+GITLAB_REPO_NAME = envvar("GITLAB_REPO_NAME", "IOCFindings")
 
 
 class Config:
@@ -60,6 +58,8 @@ class Scraper(Server):
     '''
     Scraper will be a class representing the scraper-service.
     '''
+
+    SOURCES = {}
 
     @scheduler.task("interval", id="health_push", seconds=5, timezone=pytz.UTC)
     def healthpush():
@@ -98,7 +98,7 @@ class Scraper(Server):
             print("Stepping into __get_data_from_rss_feed")
 
             rss_scraper = RssScraper
-            url_list = Scraper.__load_csv_sources(RSS_FEED_CSV_PATH)
+            url_list = Scraper.SOURCES["rss_sources"]
             ret_val_list = []
 
             for url in url_list:
@@ -161,7 +161,7 @@ class Scraper(Server):
             print("Stepping into __get_data_from_twitter_feed")
 
             twitter_scraper = TwitterScraper
-            twitter_user_list = Scraper.__load_csv_sources(TWITTER_FEED_CSV_PATH)
+            twitter_user_list = Scraper.SOURCES["twitter_sources"]
             ret_val_list = []
 
             for twitter_user in twitter_user_list:
@@ -202,7 +202,7 @@ class Scraper(Server):
             print("Stepping into __get_data_from_api")
 
             api_scraper = ApiScraper
-            url_list = Scraper.__load_csv_sources(API_CSV_PATH)
+            url_list = Scraper.SOURCES["api_sources"]
             ret_val_list = []
 
             for url in url_list:
@@ -283,6 +283,21 @@ class Scraper(Server):
 
             return csv_list
 
+        except Exception as error:
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+
+    @scheduler.task("interval", id="refetch", seconds=30, timezone=pytz.UTC)
+    def refetch_sources():
+        '''
+        __refetch_sources will fetch the relevant sources to scrape from master every 30 seconds.
+        '''
+        content = {}
+        try:
+            content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
+                                            file="sources.json", servicename=SERVICENAME, branch_name="master")
+            content = json.load(content)
+            if content is not None:
+                Scraper.SOURCES = content
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
