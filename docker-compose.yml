@@ -66,17 +66,6 @@ services:
             <<: *common-variables
             <<: *GITLAB
             SERVICENAME: "Extractor"
-    analyser:
-        build:
-            context: .
-            dockerfile: analyser/Dockerfile
-        container_name: analyser
-        ports:
-            - "8085:8085"
-        environment: 
-            <<: *common-variables
-            <<: *MISP
-            SERVICENAME: "Analyser"
     scraper:
         build:
             context: .
