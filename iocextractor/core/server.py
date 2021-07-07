@@ -17,6 +17,7 @@ from io import StringIO
 from threading import Thread
 
 from kafka.producer import KafkaProducer
+from kafka.consumer import KafkaConsumer
 
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
@@ -150,6 +151,25 @@ class Extractor(Server):
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
         return findings
 
+    def extract_ioc(pdftext):
+        '''
+        extract_ioc will extract ioc from a given text all ioc.
+        @param pdftext will be the text to search trough.
+        @return will return a dictonary with all icos or an empty
+            dict incase of no ioc or an error.
+        '''
+        iocs = {}
+        try:
+            iocs = find_iocs(pdftext)
+            yara_rules = [rule for rule in ioce.extract_yara_rules(pdftext)]
+            iocs['yara_rules'] = yara_rules
+            ex_ioc = Extractor.extensions(pdftext)
+            iocs = merge_dicts(iocs, filter_dict_values(ex_ioc, SERVICENAME), SERVICENAME)
+            iocs = filter_by_blacklist(iocs, Extractor.BLACKLIST, SERVICENAME)
+        except Exception as error:
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+        return iocs
+
     @staticmethod
     def extract(reportpath):
         '''
@@ -168,13 +188,8 @@ class Extractor(Server):
                 for page in PDFPage.create_pages(PDFDocument(PDFParser(file))):
                     interpreter.process_page(page)
             pdftext = pdf_content.getvalue()
-            iocs = find_iocs(pdftext)
-            yara_rules = [rule for rule in ioce.extract_yara_rules(pdftext)]
-            iocs['yara_rules'] = yara_rules
-            ex_ioc = Extractor.extensions(pdftext)
+            iocs = Extractor.extract_ioc(pdftext)
             iocs['input_filename'] = (os.path.basename(reportpath)).replace(" ", "_")
-            iocs = merge_dicts(iocs, filter_dict_values(ex_ioc, SERVICENAME), SERVICENAME)
-            iocs = filter_by_blacklist(iocs, Extractor.BLACKLIST, SERVICENAME)
             Extractor.pushfindings(iocs)
             os.remove(reportpath)
         except Exception as error:
@@ -187,6 +202,33 @@ class Extractor(Server):
         '''
         try:
             send_health_message(KAFKA_SERVER, HEALTHTOPIC, SERVICENAME)
+        except Exception as error:
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+
+    @staticmethod
+    def handle_scraper_feed(data):
+        '''
+        handle_scraper_feed take the data from scraper
+            and extract all ioc and push the result to
+            KAFKA for the ioc pusher.
+        @param data will be the data from KAFKA.
+        '''
+        try:
+            json_data = json.loads(data.value.decode("utf-8"))
+            print(json_data)
+        except Exception as error:
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+
+    @staticmethod
+    def consume_findings():
+        '''
+        consume_findings will consume all findings from KAFKA and
+            push them into the gitlab repository.
+        '''
+        try:
+            consumer = KafkaConsumer(IOC_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor', api_version=(2, 7, 0),)
+            for report in consumer:
+                Thread(target=Extractor.handle_scraper_feed, args=(report,), daemon=True).start()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 

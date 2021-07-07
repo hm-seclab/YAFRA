@@ -24,6 +24,7 @@ x-common-variables: &NEO4J
     NEO_USER: "neo4j"
     NEO_PASSWORD: ${YOUR_PASSWORD}
 x-common-variables: &TWITTER
+    TWEET_COUNT: ${TWEET_COUNT}
     TWITTER_CONSUMER_KEY: ${TWITTER_CONSUMER_KEY}
     TWITTER_CONSUMER_KEY_SECRET: ${TWITTER_CONSUMER_KEY_SECRET}
     TWITTER_ACCESS_TOKEN: ${TWITTER_ACCESS_TOKEN}
@@ -143,3 +144,7 @@ services:
             - NEO4J_dbms_memory_pagecache_size=1G
             - NEO4J_dbms.memory.heap.initial_size=1G
             - NEO4J_dbms_memory_heap_max__size=1G
+    kroki:
+        image: yuzutech/kroki
+        ports:
+            - "7777:8000"
