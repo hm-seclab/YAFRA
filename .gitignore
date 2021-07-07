@@ -75,3 +75,4 @@ dmypy.json
 .vscode
 reports
 testfiles
+.env_file

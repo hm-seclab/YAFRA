@@ -1,6 +1,8 @@
 # Makefile to run different parts of the system.
 up:
-	sudo docker-compose up --build extractor pusher puller reporter sysmon analyser scraper 
+	sudo docker-compose up --build extractor pusher puller reporter sysmon scraper
+config:
+	sudo docker-compose config
 build:
 	sudo docker-compose build extractor puller pusher reporter sysmon
 zookeeper:

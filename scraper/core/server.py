@@ -11,14 +11,14 @@ from threading import Thread
 import pytz
 from kafka import KafkaProducer
 
+sys.path.append('..')
+
 from libs.gitlabl.files import read_file_from_gitlab
 from libs.kafka.topichandler import create_topic_if_not_exists
 from scraper.core.static.DataObject import DataObject
 from scraper.scrapers.api_scraper import ApiScraper
 from scraper.scrapers.rss_scraper import RssScraper
 from scraper.scrapers.twitter_scraper import TwitterScraper
-
-sys.path.append('..')
 
 from flask import Flask
 from flask_script import Server
@@ -53,6 +53,13 @@ app.config.from_object(Config())
 scheduler = APScheduler()
 scheduler.init_app(app)
 
+
+def flaskapp():
+    '''
+    flaskapp will return the FLASK_APP.
+    @return a flask_app
+    '''
+    return app
 
 class Scraper(Server):
     '''
@@ -286,7 +293,7 @@ class Scraper(Server):
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
-    @scheduler.task("interval", id="refetch", day_of_week='mon-sun', hour=3, timezone=pytz.UTC)
+    @scheduler.task("cron", id="refetch", week='*', day_of_week='*', hour=3, timezone=pytz.UTC)
     def refetch_sources():
         '''
         __refetch_sources will fetch the relevant sources to scrape from master every 30 seconds.

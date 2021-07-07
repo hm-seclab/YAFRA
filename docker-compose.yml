@@ -2,31 +2,32 @@ version: "3.4"
 x-common-variables: &common-variables
     LOGGER_TOPIC: "logging"
     HEALTH_TOPIC: "health_report"
+    SCRAPER_TOPIC: "datascraper"
     IOC_TOPIC: "ioc"
     REPORT_TOPIC: "rfreport"
-    KAFKA_SERVER: "${YOUR_IP}:9092"
+    KAFKA_SERVER: ${YOUR_IP}:9092
     SYS_VERSION: "0.1.1"
     PYTHONUNBUFFERED: 1
 x-common-variables: &GITLAB
-    GITLAB_SERVER: "http://${YOUR_IP}:10080"
-    GITLAB_TOKEN: "${YOUR_GITLAB_TOKEN}"
-    GITLAB_REPO_NAME: "${YOUR_REPONAME}"
+    GITLAB_SERVER: http://${YOUR_IP}:10080
+    GITLAB_TOKEN: ${YOUR_GITLAB_TOKEN}
+    GITLAB_REPO_NAME: ${YOUR_REPONAME}
 x-common-variables: &APIKEYS
-    VIRUS_TOTAL: "${YOUR_VT_TOKEN}"
-    LEAKIX: "${LEAKIX_API_KEY}"
+    VIRUS_TOTAL: ${YOUR_VT_TOKEN}
+    LEAKIX: ${LEAKIX_API_KEY}
 x-common-variables: &MISP
-    MISP_SERVER: "https://${YOUR_IP}:443"
-    MISP_TOKEN: "${YOUR_MISP_TOKEN}"
+    MISP_SERVER: https://${YOUR_IP}:443
+    MISP_TOKEN: ${YOUR_MISP_TOKEN}
     MISP_VERIF: "False"
 x-common-variables: &NEO4J
     NEO_SERVER: "http://${YOUR_IP}:7474"
     NEO_USER: "neo4j"
-    NEO_PASSWORD: "${YOUR_PASSWORD}"
+    NEO_PASSWORD: ${YOUR_PASSWORD}
 x-common-variables: &TWITTER
-    TWITTER_CONSUMER_KEY: "${TWITTER_CONSUMER_KEY}"
-    TWITTER_CONSUMER_KEY_SECRET: "${TWITTER_CONSUMER_KEY_SECRET}"
-    TWITTER_ACCESS_TOKEN: "${TWITTER_ACCESS_TOKEN}"
-    TWITTER_ACCESS_TOKEN_SECRET: "${TWITTER_ACCESS_TOKEN_SECRET}"
+    TWITTER_CONSUMER_KEY: ${TWITTER_CONSUMER_KEY}
+    TWITTER_CONSUMER_KEY_SECRET: ${TWITTER_CONSUMER_KEY_SECRET}
+    TWITTER_ACCESS_TOKEN: ${TWITTER_ACCESS_TOKEN}
+    TWITTER_ACCESS_TOKEN_SECRET: ${TWITTER_ACCESS_TOKEN_SECRET}
 services:
     zookeeper:
         image: wurstmeister/zookeeper
@@ -86,6 +87,8 @@ services:
             <<: *common-variables
             <<: *APIKEYS
             <<: *TWITTER
+            <<: *MISP
+            <<: *GITLAB
             SERVICENAME: "Scraper"
     pusher:
         build:

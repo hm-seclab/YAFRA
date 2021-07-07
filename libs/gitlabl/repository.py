@@ -50,33 +50,34 @@ def create_repository_if_not_exists(gitlabserver, token, repository, servicename
                         }]
                     })
                 gprojects.labels.create({'name': 'Ready', 'color': '#00cc66'})
-
-                __create_datasources_in_repository(gprojects)
+                __create_datasources_in_repository(gprojects, servicename)
         else:
             LogMessage("Repository already exists", LogMessage.LogTyp.WARNING, servicename).log()
     except Exception as error:
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
 
 
-def __create_datasources_in_repository(gprojects):
+def __create_datasources_in_repository(gprojects, servicename):
     '''
     __create_datasources_in_repository will create new datasources
     in json format within a given gitlab repository.
     @param gprojects will be the gitlab project
     '''
-    with open(os.path.abspath("../datasets/sources.json")) as file:
-        gprojects.commits.create({
-            'branch': 'master',
-            'commit_message': 'initial commit',
-            'actions': [
-                {
-                    'action': 'create',
-                    'file_path': 'api_sources.json',
-                    'content': json.dumps(json.load(file), indent=4, sort_keys=True),
-                }
-            ]
-        })
-
+    try:
+        with open(os.path.abspath("../datasets/sources.json")) as file:
+            gprojects.commits.create({
+                'branch': 'master',
+                'commit_message': 'initial commit',
+                'actions': [
+                    {
+                        'action': 'create',
+                        'file_path': 'api_sources.json',
+                        'content': json.dumps(json.load(file), indent=4, sort_keys=True),
+                    }
+                ]
+            })
+    except Exception as error:
+        LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
 
 def get_projectid_by_name(gitlabinstance, projectname, servicename):
     '''

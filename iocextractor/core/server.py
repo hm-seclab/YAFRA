@@ -91,6 +91,10 @@ class Extractor(Server):
 
     @app.route('/', methods=['GET', 'POST'])
     def file_dropzone():
+        '''
+        file_dropzone will render a drag and drop view for the reports.
+        @return a rendered template.
+        '''
         if request.method == 'POST':
             files = request.files.get('file')
             file_path = os.path.join(DOCKER_REPORTS_PATH, files.filename)

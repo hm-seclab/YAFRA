@@ -50,7 +50,7 @@ def get_filename_since_last_timestamp(gitlabserver, token, repository, timestamp
                                     filenames.append(file['new_path'])
         filenames = list(filter(lambda name: name not in forbidden_files, filenames))
     except Exception as error:
-        LogMessage(str(error)+"st", LogMessage.LogTyp.ERROR, servicename).log()
+        LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
     return filenames
 
 def get_latest_commit_hash_by_branch(gitlabserver, token, repository, branch, servicename):
