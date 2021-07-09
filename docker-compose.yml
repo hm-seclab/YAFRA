@@ -9,7 +9,7 @@ x-common-variables: &common-variables
     SYS_VERSION: "0.1.1"
     PYTHONUNBUFFERED: 1
 x-common-variables: &GITLAB
-    GITLAB_SERVER: http://${YOUR_IP}:10080
+    GITLAB_SERVER: ${GITLAB_BASEURL}
     GITLAB_TOKEN: ${YOUR_GITLAB_TOKEN}
     GITLAB_REPO_NAME: ${YOUR_REPONAME}
 x-common-variables: &APIKEYS
@@ -137,6 +137,21 @@ services:
         image: yuzutech/kroki
         ports:
             - "7777:8000"
+    gitlab:
+        image: 'gitlab/gitlab-ce:latest'
+        restart: unless-stopped
+        hostname: '${GITLAB_FQDN}'
+        environment:
+            GITLAB_OMNIBUS_CONFIG: |
+                external_url '${GITLAB_BASEURL}'
+                gitlab_rails['initial_root_password'] = '${GITLAB_INIT_ROOTPW}'
+                # Add any other gitlab.rb configuration here, each on its own line
+        ports:
+            - "8085:8085"
+        volumes:
+            - '$YOUR_LOCAL_DIR/gitlab/config:/etc/gitlab'
+            - '$YOUR_LOCAL_DIR/gitlab/logs:/var/log/gitlab'
+            - '$YOUR_LOCAL_DIR/gitlab/data:/var/opt/gitlab'
     misp:
         build: misp-docker/web
         depends_on:
