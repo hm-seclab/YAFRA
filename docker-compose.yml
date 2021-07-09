@@ -16,7 +16,7 @@ x-common-variables: &APIKEYS
     VIRUS_TOTAL: ${YOUR_VT_TOKEN}
     LEAKIX: ${LEAKIX_API_KEY}
 x-common-variables: &MISP
-    MISP_SERVER: https://${YOUR_IP}:443
+    MISP_SERVER: ${MISP_BASEURL}
     MISP_TOKEN: ${YOUR_MISP_TOKEN}
     MISP_VERIF: "False"
 x-common-variables: &NEO4J
@@ -137,3 +137,35 @@ services:
         image: yuzutech/kroki
         ports:
             - "7777:8000"
+    misp:
+        build: misp-docker/web
+        depends_on:
+            - misp-db
+        image: misp:latest
+        restart: unless-stopped
+        ports:
+            - "8087:443"
+        volumes:
+            - /dev/urandom:/dev/random
+            - ${YOUR_LOCAL_DIR}/misp/web:/var/www/MISP
+        environment:
+            - MYSQL_HOST=${MYSQL_HOST}
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MISP_ADMIN_EMAIL=${MISP_ADMIN_EMAIL}
+            - MISP_ADMIN_PASSPHRASE=${MISP_ADMIN_PASSPHRASE}
+            - MISP_BASEURL=${MISP_BASEURL}
+            - POSTFIX_RELAY_HOST=${POSTFIX_RELAY_HOST}
+            - TIMEZONE=${TIMEZONE}
+    
+    misp-db:
+        image: mysql/mysql-server:5.7
+        restart: unless-stopped
+        volumes:
+            - ${YOUR_LOCAL_DIR}/db:/var/lib/mysql
+        environment:
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
