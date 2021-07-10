@@ -10,6 +10,8 @@ from datetime import datetime
 import gitlab
 
 from libs.kafka.logging import LogMessage
+from libs.core.environment import envvar
+GITLAB_CERT_VERIFY = True if envvar("GITLAB_VERIF", str(True)).lower() in ("yes", "y", "true", "1", "t") else False
 
 
 def create_repository_if_not_exists(gitlabserver, token, repository, servicename):
@@ -22,7 +24,7 @@ def create_repository_if_not_exists(gitlabserver, token, repository, servicename
     @param servicename is the server who sends the request.
     '''
     try:
-        if (gitlab_instance := gitlab.Gitlab(gitlabserver, token)) is not None:
+        if (gitlab_instance := gitlab.Gitlab(gitlabserver, token, ssl_verify=GITLAB_CERT_VERIFY)) is not None:
             gprojects = gitlab_instance.projects.list(all=True)
             project_names = [project.name for project in gprojects]
             if not repository in project_names:
@@ -114,7 +116,7 @@ def get_project_handle(gitlabserver, token, repository, servicename):
     '''
     gprojects = None
     try:
-        if (gitlab_instance := gitlab.Gitlab(gitlabserver, token)) is not None:
+        if (gitlab_instance := gitlab.Gitlab(gitlabserver, token, ssl_verify=GITLAB_CERT_VERIFY)) is not None:
             if (projectid := get_projectid_by_name(gitlab_instance, repository, servicename)) is not None:
                 gprojects = gitlab_instance.projects.get(projectid)
     except Exception as error:

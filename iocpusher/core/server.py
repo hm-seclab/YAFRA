@@ -53,6 +53,7 @@ VT_API_KEY = envvar("VIRUS_TOTAL", "None")
 MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0")
 MISP_TOKEN = envvar("MISP_TOKEN", None)
 MISP_CERT_VERIFY = True if envvar("MISP_VERIF", True) == "True" else False
+GITLAB_CERT_VERIFY = True if envvar("GITLAB_VERIF", str(True)).lower() in ("yes", "y", "true", "1", "t") else False
 
 class Config:
     '''
@@ -247,7 +248,7 @@ class Pusher(Server):
         try:
             findings = json.loads(findings.value.decode("utf-8"))
             report_name = findings['input_filename'] if 'input_filename' in findings.keys() else random.randint(4, 10000)
-            gitlab_instance = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN)
+            gitlab_instance = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN, ssl_verify=GITLAB_CERT_VERIFY)
             projectid = get_projectid_by_name(gitlab_instance, GITLAB_REPO_NAME, SERVICENAME)
             gprojects = gitlab_instance.projects.get(projectid)
             gprojects.branches.create({'branch': report_name, 'ref': get_branch_name()})
