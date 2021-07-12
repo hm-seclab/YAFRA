@@ -77,7 +77,7 @@ class Scraper(Server):
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
-    @staticmethod
+    @scheduler.task("cron", id="refetch", week='*', day_of_week='*', hour=4, timezone=pytz.UTC)
     def collect_data_from_sources():
         '''
         collect_data_from_sources starts the collection process by scraping data from various given sources.
@@ -313,5 +313,4 @@ class Scraper(Server):
         '''
         create_topic_if_not_exists(KAFKA_SERVER, SCRAPER_TOPIC_NAME)
         scheduler.start()
-        Thread(target=Scraper.collect_data_from_sources(), daemon=True).start()
         return Server.__call__(self, app, *args, **kwargs)
