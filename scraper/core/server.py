@@ -313,5 +313,4 @@ class Scraper(Server):
         '''
         create_topic_if_not_exists(KAFKA_SERVER, SCRAPER_TOPIC_NAME)
         scheduler.start()
-        Thread(target=Scraper.collect_data_from_sources(), daemon=True).start()
         return Server.__call__(self, app, *args, **kwargs)
