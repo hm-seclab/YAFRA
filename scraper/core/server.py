@@ -39,7 +39,6 @@ GITLAB_SERVER = envvar("GITLAB_SERVER", "0.0.0.0:10082")
 GITLAB_TOKEN = envvar("GITLAB_TOKEN", "NOTWORKING")
 GITLAB_REPO_NAME = envvar("GITLAB_REPO_NAME", "IOCFindings")
 
-
 class Config:
     '''
     Config class with configs for flask.
