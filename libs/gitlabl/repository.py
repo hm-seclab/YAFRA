@@ -11,6 +11,7 @@ import gitlab
 
 from libs.kafka.logging import LogMessage
 from libs.core.environment import envvar
+
 GITLAB_CERT_VERIFY = True if envvar("GITLAB_VERIF", str(True)).lower() in ("yes", "y", "true", "1", "t") else False
 
 
@@ -66,7 +67,9 @@ def __create_datasources_in_repository(gprojects, servicename):
     @param gprojects will be the gitlab project
     '''
     try:
-        with open(os.path.abspath("../datasets/sources.json")) as file:
+        with open(os.path.abspath("../datasets/sources/api_sources.json")) as api_sources, open(
+                os.path.abspath("../datasets/sources/rss_sources.json")) as rss_sources, open(
+                os.path.abspath("../datasets/sources/twitter_sources.json")) as twitter_sources:
             gprojects.commits.create({
                 'branch': 'master',
                 'commit_message': 'initial commit',
@@ -74,7 +77,17 @@ def __create_datasources_in_repository(gprojects, servicename):
                     {
                         'action': 'create',
                         'file_path': 'api_sources.json',
-                        'content': json.dumps(json.load(file), indent=4, sort_keys=True),
+                        'content': json.dumps(json.load(api_sources), indent=4, sort_keys=True),
+                    },
+                    {
+                        'action': 'create',
+                        'file_path': 'rss_sources.json',
+                        'content': json.dumps(json.load(api_sources), indent=4, sort_keys=True),
+                    },
+                    {
+                        'action': 'create',
+                        'file_path': 'twitter_sources.json',
+                        'content': json.dumps(json.load(api_sources), indent=4, sort_keys=True),
                     }
                 ]
             })
