@@ -77,7 +77,7 @@ class Scraper(Server):
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
-    @staticmethod
+    @scheduler.task("cron", id="refetch", week='*', day_of_week='*', hour=4, timezone=pytz.UTC)
     def collect_data_from_sources():
         '''
         collect_data_from_sources starts the collection process by scraping data from various given sources.
