@@ -6,7 +6,6 @@ This class will represent the reporter-server.
 import datetime
 import json
 import sys
-from threading import Thread
 
 import pytz
 from kafka import KafkaProducer
@@ -300,7 +299,7 @@ class Scraper(Server):
     @scheduler.task("cron", id="refetch", week='*', day_of_week='*', hour=3, timezone=pytz.UTC)
     def refetch_sources():
         '''
-        refetch_sources will fetch the relevant sources to scrape from master once a day.
+        refetch_sources will fetch the relevant sources to scrape from the branch datasources once a day.
         '''
         content = {}
         api_content = {}
@@ -308,11 +307,11 @@ class Scraper(Server):
         twitter_content = {}
         try:
             api_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                                file="api_sources.json", servicename=SERVICENAME, branch_name="master")
+                                                file="api_sources.json", servicename=SERVICENAME, branch_name="datasources")
             rss_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                                file="rss_sources.json", servicename=SERVICENAME, branch_name="master")
+                                                file="rss_sources.json", servicename=SERVICENAME, branch_name="datasources")
             twitter_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                                file="twitter_sources.json", servicename=SERVICENAME, branch_name="master")
+                                                file="twitter_sources.json", servicename=SERVICENAME, branch_name="datasources")
 
             content = {**api_content, **rss_content, **twitter_content}
 
@@ -326,7 +325,7 @@ class Scraper(Server):
     @staticmethod
     def __fetch_sources_initial():
         '''
-        __fetch_sources_initial will inital fetch the sources from gitlab.
+        __fetch_sources_initial will initial fetch the sources from gitlab.
         '''
         content = {}
         api_content = {}
@@ -334,11 +333,11 @@ class Scraper(Server):
         twitter_content = {}
         try:
             api_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                                file="api_sources.json", servicename=SERVICENAME, branch_name="master")
+                                                file="api_sources.json", servicename=SERVICENAME, branch_name="datasources")
             rss_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                                file="rss_sources.json", servicename=SERVICENAME, branch_name="master")
+                                                file="rss_sources.json", servicename=SERVICENAME, branch_name="datasources")
             twitter_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                                file="twitter_sources.json", servicename=SERVICENAME, branch_name="master")
+                                                file="twitter_sources.json", servicename=SERVICENAME, branch_name="datasources")
 
             content = {**api_content, **rss_content, **twitter_content}
 

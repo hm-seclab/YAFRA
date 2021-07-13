@@ -64,14 +64,18 @@ def __create_datasources_in_repository(gprojects, servicename):
     '''
     __create_datasources_in_repository will create new datasources
     in json format within a given gitlab repository.
+    Those datasources are stored within a protected branch.
     @param gprojects will be the gitlab project
     '''
     try:
+        datasources_branch = gprojects.branches.create({'branch': 'datasources', 'ref': 'master'})
+        datasources_branch.protect()
+
         with open(os.path.abspath("../datasets/sources/api_sources.json")) as api_sources, open(
                 os.path.abspath("../datasets/sources/rss_sources.json")) as rss_sources, open(
                 os.path.abspath("../datasets/sources/twitter_sources.json")) as twitter_sources:
             gprojects.commits.create({
-                'branch': 'master',
+                'branch': 'datasources',
                 'commit_message': 'initial commit',
                 'actions': [
                     {
