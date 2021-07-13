@@ -39,6 +39,7 @@ GITLAB_SERVER = envvar("GITLAB_SERVER", "0.0.0.0:10082")
 GITLAB_TOKEN = envvar("GITLAB_TOKEN", "NOTWORKING")
 GITLAB_REPO_NAME = envvar("GITLAB_REPO_NAME", "IOCFindings")
 
+
 class Config:
     '''
     Config class with configs for flask.
@@ -59,6 +60,7 @@ def flaskapp():
     @return a flask_app
     '''
     return app
+
 
 class Scraper(Server):
     '''
@@ -83,6 +85,9 @@ class Scraper(Server):
         collect_data_from_sources starts the collection process by scraping data from various given sources.
         '''
         try:
+            if not Scraper.SOURCES:
+                Scraper.__fetch_sources_initial()
+
             rss_data = Scraper.__get_data_from_rss_feed()
             twitter_data = Scraper.__get_data_from_twitter_feed()
             api_data = Scraper.__get_data_from_api()
@@ -295,13 +300,50 @@ class Scraper(Server):
     @scheduler.task("cron", id="refetch", week='*', day_of_week='*', hour=3, timezone=pytz.UTC)
     def refetch_sources():
         '''
-        __refetch_sources will fetch the relevant sources to scrape from master every 30 seconds.
+        refetch_sources will fetch the relevant sources to scrape from master once a day.
         '''
         content = {}
+        api_content = {}
+        rss_content = {}
+        twitter_content = {}
         try:
-            content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                            file="sources.json", servicename=SERVICENAME, branch_name="master")
+            api_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
+                                                file="api_sources.json", servicename=SERVICENAME, branch_name="master")
+            rss_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
+                                                file="rss_sources.json", servicename=SERVICENAME, branch_name="master")
+            twitter_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
+                                                file="twitter_sources.json", servicename=SERVICENAME, branch_name="master")
+
+            content = {**api_content, **rss_content, **twitter_content}
+
             content = json.load(content)
+
+            if content is not None:
+                Scraper.SOURCES = content
+        except Exception as error:
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+
+    @staticmethod
+    def __fetch_sources_initial():
+        '''
+        __fetch_sources_initial will inital fetch the sources from gitlab.
+        '''
+        content = {}
+        api_content = {}
+        rss_content = {}
+        twitter_content = {}
+        try:
+            api_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
+                                                file="api_sources.json", servicename=SERVICENAME, branch_name="master")
+            rss_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
+                                                file="rss_sources.json", servicename=SERVICENAME, branch_name="master")
+            twitter_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
+                                                file="twitter_sources.json", servicename=SERVICENAME, branch_name="master")
+
+            content = {**api_content, **rss_content, **twitter_content}
+
+            content = json.load(content)
+
             if content is not None:
                 Scraper.SOURCES = content
         except Exception as error:
