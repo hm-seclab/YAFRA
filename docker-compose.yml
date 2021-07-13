@@ -5,7 +5,7 @@ x-common-variables: &common-variables
     SCRAPER_TOPIC: "datascraper"
     IOC_TOPIC: "ioc"
     REPORT_TOPIC: "rfreport"
-    KAFKA_SERVER: ${YOUR_IP}:9092
+    KAFKA_SERVER: kafka:9092
     SYS_VERSION: "0.1.1"
     PYTHONUNBUFFERED: 1
 x-gitlab: &GITLAB
@@ -34,15 +34,13 @@ services:
     zookeeper:
         image: wurstmeister/zookeeper
         container_name: zookeeper
-        ports: 
-            - "2181:2181"
     kafka:
         image: wurstmeister/kafka
         container_name: kafka
-        ports:
-            - "9092:9092"
+        depends_on: 
+            - zookeeper
         environment: 
-            KAFKA_ADVERTISED_HOST_NAME: ${YOUR_IP}
+            KAFKA_ADVERTISED_HOST_NAME: kafka
             KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     sysmon:
         build:
