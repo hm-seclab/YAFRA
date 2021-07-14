@@ -1,4 +1,23 @@
 {
   "rss_sources": [
+    "https://www.fireeye.com/blog/threat-research/_jcr_content.feed",
+    "https://phishunt.io/feed.txt",
+    "https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml",
+    "https://www.riskiq.com/feed/",
+    "https://www.malware-traffic-analysis.net/blog-entries.rss",
+    "https://us-cert.cisa.gov/ics/alerts/alerts.xml",
+    "https://us-cert.cisa.gov/ics/advisories/advisories.xml",
+    "https://us-cert.cisa.gov/ncas/analysis-reports.xml",
+    "https://us-cert.cisa.gov/ncas/current-activity.xml",
+    "https://us-cert.cisa.gov/ncas/bulletins.xml",
+    "https://us-cert.cisa.gov/ncas/alerts.xml",
+    "https://publicintelligence.net/feed",
+    "https://csirt.gov.it/data/indexer/rss",
+    "https://cyber.gc.ca/en/rss-feeds",
+    "https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml",
+    "https://www.ncsc.gov.uk/information/rss-feeds",
+    "https://www.enisa.europa.eu/front-page/RSS",
+    "https://cyber.gc.ca/en/rss-feeds",
+    "https://www.cyber.gov.au/acsc/view-all-content/alerts/rss"
   ]
 }

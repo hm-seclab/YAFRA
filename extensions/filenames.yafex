@@ -1,6 +1,6 @@
 Name: Filename
 Field: cfilenames
-Pattern: \b([A-Za-z0-9-_\.]+\.(exe|dll|msi|bat|py|sys|so|htm|html|js|jar|jpg|jpeg|png|pdb|pid|vbs|vb|scr|pif|chm|zip|rar|cab|pdf|doc|docx|ppt|pptx|ps1|ps|xls|xlsx|swf|gif|go|txt|tif|bak|app|dmg|yaml|php|php5|php7|php8|phtml|aspx|log|ini|cs|c|cpp|h|ttf|css|mp3|mp4|csv|stix|eot|ttf|tar|gz|avi|mov|mkv|mpeg|mpeg4|wav|ogg|bmp|tiff|ico|md|pl|cab|htaccess|hta))\b
+Pattern: \b([A-Za-z0-9-_\.]+\.(exe|dll|msi|bat|py|sys|so|htm|html|js|jar|jpg|jpeg|png|pdb|pid|vbs|vb|scr|pif|chm|zip|rar|cab|pdf|doc|docx|ppt|pptx|ps1|ps|xls|xlsx|swf|gif|go|txt|tif|bak|app|dmg|yaml|php|php5|php7|php8|phtml|aspx|log|ini|cs|c|cpp|h|ttf|css|mp3|mp4|csv|stix|eot|ttf|tar|gz|avi|mov|mkv|mpeg|mpeg4|wav|ogg|bmp|tiff|ico|md|pl|cab|htaccess|hta|sh|yml))\b
 PatternArgs: 0
 Summary: Find files with common files.
 Status: enabled

@@ -1,4 +1,22 @@
 {
   "twitter_sources": [
+    "@circl_lu",
+    "@AlienVault",
+    "@CrowdStrike",
+    "@DomainTools",
+    "@hyasinc",
+    "@Intel471Inc",
+    "@MISPProject",
+    "@LuatixHQ",
+    "@recordedfuture",
+    "@passivetotal",
+    "@shodanhq",
+    "@ThreatConnect",
+    "@threatminer",
+    "@VirusTotal",
+    "@FireEye",
+    "@silv0123",
+    "@bad_packets",
+    "@malware_traffic"
   ]
 }

@@ -3,11 +3,15 @@ This class will represent the reporter-server.
 '''
 
 # pylint: disable=C0413, C0411
+import sys
 import datetime
 import json
-import sys
+from dateutil.parser import DEFAULTTZPARSER
 
 import pytz
+
+from threading import Thread
+
 from kafka import KafkaProducer
 
 sys.path.append('..')
@@ -29,7 +33,7 @@ from libs.kafka.logging import send_health_message
 
 SERVICENAME = envvar("SERVICENAME", "Scraper")
 KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
-SCRAPER_TOPIC_NAME = envvar("SCRAPER_TOPIC", "scraper")
+SCRAPER_TOPIC_NAME = envvar("SCRAPER_TOPIC", "datascraper")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
 MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0")
 MISP_TOKEN = envvar("MISP_TOKEN", None)
@@ -78,24 +82,22 @@ class Scraper(Server):
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
+    @staticmethod
     @scheduler.task("cron", id="refetch", week='*', day_of_week='*', hour=4, timezone=pytz.UTC)
     def collect_data_from_sources():
         '''
         collect_data_from_sources starts the collection process by scraping data from various given sources.
         '''
         try:
-            if not Scraper.SOURCES:
-                Scraper.__fetch_sources_initial()
+            if len(Scraper.SOURCES) > 0:
+                Scraper.refetch_sources()
 
-            rss_data = Scraper.__get_data_from_rss_feed()
-            twitter_data = Scraper.__get_data_from_twitter_feed()
-            api_data = Scraper.__get_data_from_api()
-
-            data_list = rss_data + twitter_data + api_data
-
+            data_list = [
+                    #*Scraper.__get_data_from_rss_feed(),] 
+                    *Scraper.__get_data_from_twitter_feed(),] 
+                    #*Scraper.__get_data_from_api()]
             for data in data_list:
-                data_as_json = json.dumps(data.__dict__, default=Scraper.__datetime_converter)
-                Scraper.push_collected_data(data_as_json)
+                Scraper.push_collected_data(data.__json__())
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
@@ -104,13 +106,12 @@ class Scraper(Server):
         '''
         __get_data_from_rss_feed scrapes all the given rss-feeds and stores them properly for further usage.
         '''
+        ret_val_list = []
         try:
             print("Stepping into __get_data_from_rss_feed")
 
             rss_scraper = RssScraper
             url_list = Scraper.SOURCES["rss_sources"]
-            ret_val_list = []
-
             for url in url_list:
                 rss_feed = rss_scraper.get_rss_feed(url)
 
@@ -157,23 +158,20 @@ class Scraper(Server):
                     ret_val_list.append(data_object)
 
             print("Stepping out __get_data_from_rss_feed. Found " + str(len(ret_val_list)) + " rss-feeds.")
-            return ret_val_list
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+        return ret_val_list
 
     @staticmethod
     def __get_data_from_twitter_feed():
         '''
         __get_data_from_twitter_feed scrapes all the given tweets and stores them properly for further usage.
         '''
-
+        ret_val_list = []
         try:
-            print("Stepping into __get_data_from_twitter_feed")
 
             twitter_scraper = TwitterScraper
             twitter_user_list = Scraper.SOURCES["twitter_sources"]
-            ret_val_list = []
-
             for twitter_user in twitter_user_list:
 
                 twitter_feed_list = twitter_scraper.get_twitter_feed(twitter_user)
@@ -197,23 +195,22 @@ class Scraper(Server):
 
                     data_object = DataObject(tweet.full_text, title, str(twitter_user), date)
                     ret_val_list.append(data_object)
-
-            print("Stepping out __get_data_from_twitter_feed. Found " + str(len(ret_val_list)) + " tweets.")
-            return ret_val_list
+            LogMessage("Stepping out __get_data_from_twitter_feed. Found " + str(len(ret_val_list)) + " tweets.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+        return ret_val_list
 
     @staticmethod
     def __get_data_from_api():
         '''
         __get_data_from_api scrapes all the given apis and stores the responses properly for further usage.
         '''
+        ret_val_list = []
         try:
             print("Stepping into __get_data_from_api")
 
             api_scraper = ApiScraper
             url_list = Scraper.SOURCES["api_sources"]
-            ret_val_list = []
 
             for url in url_list:
                 api_response_list = api_scraper.get_api_response(url)
@@ -251,9 +248,9 @@ class Scraper(Server):
                     ret_val_list.append(data_object)
 
             print("Stepping out __get_data_from_api. Found " + str(len(ret_val_list)) + " api responses.")
-            return ret_val_list
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+        return ret_val_list
 
     @staticmethod
     def __datetime_converter(o):
@@ -271,31 +268,12 @@ class Scraper(Server):
         '''
         try:
             producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER, client_id='scraper', api_version=(2, 7, 0))
-            message = str(data)
+            message = str(json.dumps(data)).encode('UTF-8')
             producer.send(SCRAPER_TOPIC_NAME, message)
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
     @staticmethod
-    def __load_csv_sources(path_to_csv):
-        '''
-        __load_csv_sources is a helper method to load the relevant
-        csv sources, which are necessary to scrape the data from.
-        @param path_to_csv path to the csv file.
-        '''
-        try:
-            csv_list = []
-
-            with open(path_to_csv, 'r') as f:
-                for line in f.readlines():
-                    l = line.strip()
-                    csv_list.append(l)
-
-            return csv_list
-
-        except Exception as error:
-            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
-
     @scheduler.task("cron", id="refetch", week='*', day_of_week='*', hour=3, timezone=pytz.UTC)
     def refetch_sources():
         '''
@@ -313,35 +291,11 @@ class Scraper(Server):
             twitter_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
                                                 file="twitter_sources.json", servicename=SERVICENAME, branch_name="datasources")
 
-            content = {**api_content, **rss_content, **twitter_content}
-
-            content = json.load(content)
-
-            if content is not None:
-                Scraper.SOURCES = content
-        except Exception as error:
-            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
-
-    @staticmethod
-    def __fetch_sources_initial():
-        '''
-        __fetch_sources_initial will initial fetch the sources from gitlab.
-        '''
-        content = {}
-        api_content = {}
-        rss_content = {}
-        twitter_content = {}
-        try:
-            api_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                                file="api_sources.json", servicename=SERVICENAME, branch_name="datasources")
-            rss_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                                file="rss_sources.json", servicename=SERVICENAME, branch_name="datasources")
-            twitter_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                                file="twitter_sources.json", servicename=SERVICENAME, branch_name="datasources")
+            api_content = json.loads(api_content)
+            rss_content = json.loads(rss_content)
+            twitter_content = json.loads(twitter_content)
 
             content = {**api_content, **rss_content, **twitter_content}
-
-            content = json.load(content)
 
             if content is not None:
                 Scraper.SOURCES = content
@@ -354,4 +308,6 @@ class Scraper(Server):
         '''
         create_topic_if_not_exists(KAFKA_SERVER, SCRAPER_TOPIC_NAME)
         scheduler.start()
+        Scraper.refetch_sources()
+        Thread(target=Scraper.collect_data_from_sources(), daemon=True).start()
         return Server.__call__(self, app, *args, **kwargs)

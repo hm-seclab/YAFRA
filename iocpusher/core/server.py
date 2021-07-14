@@ -5,6 +5,7 @@ This class will represent the iocpusher-server.
 # pylint: disable=C0413, C0411
 
 import sys
+import time
 import json
 import random
 import pytz
@@ -239,7 +240,7 @@ class Pusher(Server):
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
     @staticmethod
-    def submit_report(findings):
+    def submit_report(gprojects, findings):
         '''
         submit_report will submit the pull-request into the
             IoC-[CurrentDate]-Branch.
@@ -248,12 +249,9 @@ class Pusher(Server):
         try:
             findings = json.loads(findings.value.decode("utf-8"))
             report_name = findings['input_filename'] if 'input_filename' in findings.keys() else random.randint(4, 10000)
-            gitlab_instance = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN, ssl_verify=GITLAB_CERT_VERIFY)
-            projectid = get_projectid_by_name(gitlab_instance, GITLAB_REPO_NAME, SERVICENAME)
-            gprojects = gitlab_instance.projects.get(projectid)
             gprojects.branches.create({'branch': report_name, 'ref': get_branch_name()})
             data = Pusher.create_markdown(findings, report_name)
-            commit = gprojects.commits.create(data)
+            _ = gprojects.commits.create(data)
             create_issues(  gitlabserver=GITLAB_SERVER,
                             token=GITLAB_TOKEN,
                             repository=GITLAB_REPO_NAME,
@@ -273,8 +271,12 @@ class Pusher(Server):
         '''
         try:
             consumer = KafkaConsumer(IOC_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_pusher', api_version=(2, 7, 0),)
+            gitlab_instance = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN, ssl_verify=GITLAB_CERT_VERIFY)
+            projectid = get_projectid_by_name(gitlab_instance, GITLAB_REPO_NAME, SERVICENAME)
+            gprojects = gitlab_instance.projects.get(projectid)
             for report in consumer:
-                Thread(target=Pusher.submit_report, args=(report,), daemon=True).start()
+                Thread(target=Pusher.submit_report, args=(gprojects, report,), daemon=True).start()
+                time.sleep(3)
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 

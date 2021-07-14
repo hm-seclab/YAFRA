@@ -24,9 +24,8 @@ class TwitterScraper:
 
     @staticmethod
     def get_twitter_feed(twitter_user):
-
+        #TODO comment
         twitter_feed_list = []
-
         try:
             tweets = api.user_timeline(screen_name=twitter_user,
                                        # 200 is the maximum allowed count
@@ -40,7 +39,6 @@ class TwitterScraper:
             for info in tweets[:int(TWEET_COUNT)]:
                 if info is not None:
                     twitter_feed_list.append(info)
-
-            return twitter_feed_list
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+        return twitter_feed_list

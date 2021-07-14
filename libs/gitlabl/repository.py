@@ -44,16 +44,16 @@ def create_repository_if_not_exists(gitlabserver, token, repository, servicename
                             }]
                     })
                 if 'README.md' in [gprojects.repository_tree(branch='master')]:
-                    gprojects.commits.create({
+                        gprojects.commits.create({
                         'branch': 'master',
-                        'commit_message': 'initial commit',
+                        'commit_message': 'Remove README.md',
                         'actions': [{
                             'action': 'delete',
                             'file_path': 'README.md',
                         }]
                     })
-                gprojects.labels.create({'name': 'Ready', 'color': '#00cc66'})
                 __create_datasources_in_repository(gprojects, servicename)
+                gprojects.labels.create({'name': 'Ready', 'color': '#00cc66'})
         else:
             LogMessage("Repository already exists", LogMessage.LogTyp.WARNING, servicename).log()
     except Exception as error:
@@ -69,14 +69,12 @@ def __create_datasources_in_repository(gprojects, servicename):
     '''
     try:
         datasources_branch = gprojects.branches.create({'branch': 'datasources', 'ref': 'master'})
-        datasources_branch.protect()
-
         with open(os.path.abspath("../datasets/sources/api_sources.json")) as api_sources, open(
                 os.path.abspath("../datasets/sources/rss_sources.json")) as rss_sources, open(
                 os.path.abspath("../datasets/sources/twitter_sources.json")) as twitter_sources:
             gprojects.commits.create({
                 'branch': 'datasources',
-                'commit_message': 'initial commit',
+                'commit_message': 'datasource commit',
                 'actions': [
                     {
                         'action': 'create',
@@ -86,15 +84,20 @@ def __create_datasources_in_repository(gprojects, servicename):
                     {
                         'action': 'create',
                         'file_path': 'rss_sources.json',
-                        'content': json.dumps(json.load(api_sources), indent=4, sort_keys=True),
+                        'content': json.dumps(json.load(rss_sources), indent=4, sort_keys=True),
                     },
                     {
                         'action': 'create',
                         'file_path': 'twitter_sources.json',
-                        'content': json.dumps(json.load(api_sources), indent=4, sort_keys=True),
+                        'content': json.dumps(json.load(twitter_sources), indent=4, sort_keys=True),
+                    },
+                    {
+                        'action': 'delete',
+                        'file_path': 'blacklist.json',
                     }
                 ]
             })
+        datasources_branch.protect()
     except Exception as error:
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
 

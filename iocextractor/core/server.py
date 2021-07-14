@@ -48,6 +48,7 @@ from libs.gitlabl.files import read_file_from_gitlab
 # ENVIRONMENT-VARS
 SERVICENAME = envvar("SERVICENAME", "Extractor")
 IOC_TOPIC_NAME = envvar("IOC_TOPIC", "ioc")
+SCRAPER_TOPIC_NAME = envvar("SCRAPER_TOPIC", "datascraper")
 KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
 GITLAB_SERVER = envvar("GITLAB_SERVER", "0.0.0.0:10082")
@@ -189,7 +190,7 @@ class Extractor(Server):
                     interpreter.process_page(page)
             pdftext = pdf_content.getvalue()
             iocs = Extractor.extract_ioc(pdftext)
-            iocs['input_filename'] = (os.path.basename(reportpath)).replace(" ", "_")
+            iocs['input_filename'] = (os.path.basename(reportpath)).replace(" ", "_") #TODO filename
             Extractor.pushfindings(iocs)
             os.remove(reportpath)
         except Exception as error:
@@ -214,19 +215,24 @@ class Extractor(Server):
         @param data will be the data from KAFKA.
         '''
         try:
-            json_data = json.loads(data.value.decode("utf-8"))
-            print(json_data)
+            if (json_data := json.loads(data.value.decode("utf-8"))) is not None: #and all(list(map(lambda x: x in json_data.keys(), ['title', 'content']))):
+                iocs = Extractor.extract_ioc(json_data.get('content'))
+                t = str(json_data.get('title')).replace(" ", "_").replace("@", "").replace(":", "-").replace(",", "-").replace(".", "-").replace("+", "-").replace("/", "-") #TODO filename
+                t = t.replace("'", "").replace("!", "_")
+                print(t)
+                iocs['input_filename'] = t
+                Extractor.pushfindings(iocs)
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
     @staticmethod
-    def consume_findings():
+    def consume_findings_from_scraper():
         '''
-        consume_findings will consume all findings from KAFKA and
+        consume_findings_from_scraper will consume all findings from KAFKA and
             push them into the gitlab repository.
         '''
         try:
-            consumer = KafkaConsumer(IOC_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor', api_version=(2, 7, 0),)
+            consumer = KafkaConsumer(SCRAPER_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor', api_version=(2, 7, 0),)
             for report in consumer:
                 Thread(target=Extractor.handle_scraper_feed, args=(report,), daemon=True).start()
         except Exception as error:
@@ -252,7 +258,7 @@ class Extractor(Server):
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
-    def __call__(self, app, *args, **kwargs): #IOC_TOPIC_NAME
+    def __call__(self, app, *args, **kwargs):
         '''
         __call__ will be executed befor the server creation and run some functions
             on startup. So a Topic will be create for the IoC's and the scheduler
@@ -264,5 +270,6 @@ class Extractor(Server):
         '''
         create_topic_if_not_exists(KAFKA_SERVER, IOC_TOPIC_NAME)
         scheduler.start()
+        Thread(target=Extractor.consume_findings_from_scraper, daemon=True).start()
         Extractor.BLACKLIST = Extractor.refetch_blacklist()
         return Server.__call__(self, app, *args, **kwargs)
