@@ -274,8 +274,7 @@ class Extractor(Server):
             of the server-class
         '''
         create_topic_if_not_exists(KAFKA_SERVER, IOC_TOPIC_NAME)
-        scheduler.start()
-        Extractor.refetch_blacklist()
-        Thread(target=Extractor.consume_findings_from_scraper, daemon=True).start()
         Extractor.BLACKLIST = Extractor.refetch_blacklist()
+        scheduler.start()
+        Thread(target=Extractor.consume_findings_from_scraper, daemon=True).start()
         return Server.__call__(self, app, *args, **kwargs)
