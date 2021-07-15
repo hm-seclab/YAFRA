@@ -4,7 +4,6 @@ Server-Class for the extractions of IoC's.
 
 # pylint: disable=C0413, C0411
 
-from logging import debug
 import os
 import sys
 import json
@@ -103,6 +102,7 @@ class Extractor(Server):
             files.save(file_path)
         return render_template('index.html')
 
+    @staticmethod
     @scheduler.task("interval", id="refetch", seconds=30, timezone=pytz.UTC)
     def refetch_blacklist():
         '''
@@ -110,8 +110,13 @@ class Extractor(Server):
         '''
         content = {}
         try:
-            content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, file="blacklist.json", servicename=SERVICENAME, branch_name="master")
-            content = json.loads(content)
+            if len(Extractor.BLACKLIST) <= 0:
+                with open(os.path.abspath("../../datasets/blacklist.json")) as content:
+                    content = json.load(content)
+            else:
+                content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, file="blacklist.json", servicename=SERVICENAME, branch_name="master")
+                content = json.loads(content)
+
             if content is not None:
                 Extractor.BLACKLIST = content
         except Exception as error:
@@ -270,6 +275,7 @@ class Extractor(Server):
         '''
         create_topic_if_not_exists(KAFKA_SERVER, IOC_TOPIC_NAME)
         scheduler.start()
+        Extractor.refetch_blacklist()
         Thread(target=Extractor.consume_findings_from_scraper, daemon=True).start()
         Extractor.BLACKLIST = Extractor.refetch_blacklist()
         return Server.__call__(self, app, *args, **kwargs)
