@@ -18,7 +18,7 @@ def sanitize_title(unsanitized_title, servicename):
     '''
 
     # md5 hash as default value, to make sure, the report has a valid and unique title for gitlab
-    sanitized_title = hashlib.md5(unsanitized_title.encode()).hexdigest()
+    sanitized_title = hashlib.md5(unsanitized_title.encode('UTF-8')).hexdigest()
     try:
         # Replace spaces with - in the first place for readability
         unsanitized_title = unsanitized_title.replace(' ', '-')
