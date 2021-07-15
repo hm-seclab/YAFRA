@@ -3,6 +3,7 @@ This class will represent the reporter-server.
 '''
 
 # pylint: disable=C0413, C0411
+import os
 import sys
 import datetime
 import json
@@ -89,12 +90,9 @@ class Scraper(Server):
         collect_data_from_sources starts the collection process by scraping data from various given sources.
         '''
         try:
-            if len(Scraper.SOURCES) > 0:
-                Scraper.refetch_sources()
-
             data_list = [
-                    #*Scraper.__get_data_from_rss_feed(),] 
-                    *Scraper.__get_data_from_twitter_feed(),] 
+                    #*Scraper.__get_data_from_rss_feed(),]
+                    *Scraper.__get_data_from_twitter_feed(),]
                     #*Scraper.__get_data_from_api()]
             for data in data_list:
                 Scraper.push_collected_data(data.__json__())
@@ -284,16 +282,24 @@ class Scraper(Server):
         rss_content = {}
         twitter_content = {}
         try:
-            api_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                                file="api_sources.json", servicename=SERVICENAME, branch_name="datasources")
-            rss_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                                file="rss_sources.json", servicename=SERVICENAME, branch_name="datasources")
-            twitter_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
-                                                file="twitter_sources.json", servicename=SERVICENAME, branch_name="datasources")
+            if len(Scraper.SOURCES) <= 0:
+                with open(os.path.abspath("../../datasets/sources/api_sources.json")) as api_content, open(
+                    os.path.abspath("../../datasets/sources/rss_sources.json")) as rss_content, open(
+                    os.path.abspath("../../datasets/sources/twitter_sources.json")) as twitter_content:
+                    api_content = json.load(api_content)
+                    rss_content = json.load(rss_content)
+                    twitter_content = json.load(twitter_content)
+            else:
+                api_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
+                                                    file="api_sources.json", servicename=SERVICENAME, branch_name="datasources")
+                rss_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
+                                                    file="rss_sources.json", servicename=SERVICENAME, branch_name="datasources")
+                twitter_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
+                                                    file="twitter_sources.json", servicename=SERVICENAME, branch_name="datasources")
 
-            api_content = json.loads(api_content)
-            rss_content = json.loads(rss_content)
-            twitter_content = json.loads(twitter_content)
+                api_content = json.loads(api_content)
+                rss_content = json.loads(rss_content)
+                twitter_content = json.loads(twitter_content)
 
             content = {**api_content, **rss_content, **twitter_content}
 
@@ -307,7 +313,7 @@ class Scraper(Server):
         __call__ override __call__ function from server-class.
         '''
         create_topic_if_not_exists(KAFKA_SERVER, SCRAPER_TOPIC_NAME)
-        scheduler.start()
         Scraper.refetch_sources()
+        scheduler.start()
         Thread(target=Scraper.collect_data_from_sources(), daemon=True).start()
         return Server.__call__(self, app, *args, **kwargs)
