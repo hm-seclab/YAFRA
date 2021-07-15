@@ -157,6 +157,16 @@ def create_monthly_if_not_exists(gitlabserver, token, repository, servicename):
         gprojects = get_project_handle(gitlabserver, token, repository, servicename)
         if not branch_name in [branch.name for branch in gprojects.branches.list()]:
             gprojects.branches.create({'branch': branch_name, 'ref': 'master'})
+            gprojects.commits.create({
+                'branch': str(branch_name),
+                'commit_message': 'remove blacklist',
+                'actions': [
+                    {
+                        'action': 'delete',
+                        'file_path': 'blacklist.json',
+                    }
+                ]
+            })
         else:
             LogMessage("Monthlybranch already exists", LogMessage.LogTyp.INFO, servicename).log()
     except Exception as error:
