@@ -1,6 +1,7 @@
 '''
 This script contains function to sanitize the title for gitlab branches.
 '''
+import hashlib
 import re
 
 from libs.kafka.logging import LogMessage
@@ -15,7 +16,9 @@ def sanitize_title(unsanitized_title, servicename):
         @param servicename will be the name of the service calling this function.
     @return a sanitized title without any special chars except - in string format.
     '''
-    sanitized_title = unsanitized_title
+
+    # md5 hash as default value, to make sure, the report has a valid and unique title for gitlab
+    sanitized_title = hashlib.md5(unsanitized_title.encode()).hexdigest()
     try:
         # Replace spaces with - in the first place for readability
         unsanitized_title = unsanitized_title.replace(' ', '-')
