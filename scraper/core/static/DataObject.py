@@ -1,4 +1,6 @@
-#TODO comments
+'''
+This object represents the scraped data as a python object.
+'''
 
 class DataObject:
     def __init__(self, content, title, source, date):
@@ -8,6 +10,9 @@ class DataObject:
         self.date = date
 
     def __json__(self):
+        '''
+        __json__ will transform the data object into a json object.
+        '''
         return {
             "content": self.content,
             "title": self.title,

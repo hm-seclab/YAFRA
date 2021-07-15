@@ -4,13 +4,15 @@ Server-Class for the extractions of IoC's.
 
 # pylint: disable=C0413, C0411
 
-from logging import debug
 import os
 import sys
 import json
 import pytz
 import re
 import iocextract as ioce
+
+from libs.gitlabl.sanitize_title import sanitize_title
+
 sys.path.append('..')
 
 from io import StringIO
@@ -57,16 +59,18 @@ GITLAB_REPO_NAME = envvar("GITLAB_REPO_NAME", "IOCFindings")
 
 DOCKER_REPORTS_PATH = "/app/iocextractor/reports"
 
+
 class Config:
     '''
     Config class with configs for flask.
     '''
     SCHEDULER_API_ENABLED = True
 
+
 app = Flask(SERVICENAME, template_folder='templates', static_folder="static/", static_url_path='/static')
 app.config.from_object(Config())
 app.config['DROPZONE_ALLOWED_FILE_CUSTOM'] = True
-app.config['DROPZONE_ALLOWED_FILE_TYPE']='.pdf'
+app.config['DROPZONE_ALLOWED_FILE_TYPE'] = '.pdf'
 app.config['DROPZONE_MAX_FILE_SIZE'] = 10
 app.config['DROPZONE_MAX_FILES'] = 100
 app.config['UPLOADED_PATH'] = os.path.join(DOCKER_REPORTS_PATH, 'uploads')
@@ -76,12 +80,14 @@ dropzone = Dropzone(app)
 scheduler = APScheduler()
 scheduler.init_app(app)
 
+
 def flaskapp():
     '''
     flaskapp will return the FLASK_APP.
     @return a flask_app
     '''
     return app
+
 
 class Extractor(Server):
     '''
@@ -110,7 +116,8 @@ class Extractor(Server):
         '''
         content = {}
         try:
-            content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, file="blacklist.json", servicename=SERVICENAME, branch_name="master")
+            content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
+                                            file="blacklist.json", servicename=SERVICENAME, branch_name="master")
             content = json.loads(content)
             if content is not None:
                 Extractor.BLACKLIST = content
@@ -124,7 +131,7 @@ class Extractor(Server):
         @param findings will be the findings.
         '''
         try:
-            producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor', api_version=(2,7,0))
+            producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor', api_version=(2, 7, 0))
             message = str(json.dumps(findings)).encode('UTF-8')
             producer.send(IOC_TOPIC_NAME, message)
         except Exception as error:
@@ -143,7 +150,9 @@ class Extractor(Server):
                 try:
                     l_findings = re.findall(i.get_pattern(), string)
                     if len(l_findings) > 0 and isinstance(l_findings[0], tuple):
-                        findings[str(i.field)] = [element[i.get_group()] if len(element)-1 >= i.get_group() else element.group(0) for element in l_findings]
+                        findings[str(i.field)] = [
+                            element[i.get_group()] if len(element) - 1 >= i.get_group() else element.group(0) for
+                            element in l_findings]
                     else:
                         findings[str(i.field)] = l_findings
                 except Exception as error:
@@ -190,7 +199,8 @@ class Extractor(Server):
                     interpreter.process_page(page)
             pdftext = pdf_content.getvalue()
             iocs = Extractor.extract_ioc(pdftext)
-            iocs['input_filename'] = (os.path.basename(reportpath)).replace(" ", "_") #TODO filename
+            input_filename = sanitize_title(unsanitized_title=str((os.path.basename(reportpath))), servicename=SERVICENAME)
+            iocs['input_filename'] = input_filename
             Extractor.pushfindings(iocs)
             os.remove(reportpath)
         except Exception as error:
@@ -215,12 +225,10 @@ class Extractor(Server):
         @param data will be the data from KAFKA.
         '''
         try:
-            if (json_data := json.loads(data.value.decode("utf-8"))) is not None: #and all(list(map(lambda x: x in json_data.keys(), ['title', 'content']))):
+            if (json_data := json.loads(data.value.decode("utf-8"))) is not None:
                 iocs = Extractor.extract_ioc(json_data.get('content'))
-                t = str(json_data.get('title')).replace(" ", "_").replace("@", "").replace(":", "-").replace(",", "-").replace(".", "-").replace("+", "-").replace("/", "-") #TODO filename
-                t = t.replace("'", "").replace("!", "_")
-                print(t)
-                iocs['input_filename'] = t
+                input_filename = sanitize_title(unsanitized_title=str(json_data.get('title')), servicename=SERVICENAME)
+                iocs['input_filename'] = input_filename
                 Extractor.pushfindings(iocs)
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
@@ -232,7 +240,8 @@ class Extractor(Server):
             push them into the gitlab repository.
         '''
         try:
-            consumer = KafkaConsumer(SCRAPER_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor', api_version=(2, 7, 0),)
+            consumer = KafkaConsumer(SCRAPER_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor',
+                                     api_version=(2, 7, 0), )
             for report in consumer:
                 Thread(target=Extractor.handle_scraper_feed, args=(report,), daemon=True).start()
         except Exception as error:
@@ -250,7 +259,8 @@ class Extractor(Server):
                 threads = []
                 for report in reports:
                     if report.endswith(".pdf"):
-                        threads.append(Thread(target=Extractor.extract, args=(os.path.join(DOCKER_REPORTS_PATH, report),)))
+                        threads.append(
+                            Thread(target=Extractor.extract, args=(os.path.join(DOCKER_REPORTS_PATH, report),)))
                 for instance in threads:
                     instance.start()
                 for instance in threads:

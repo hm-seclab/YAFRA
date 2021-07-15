@@ -24,7 +24,11 @@ class TwitterScraper:
 
     @staticmethod
     def get_twitter_feed(twitter_user):
-        #TODO comment
+        '''
+        get_twitter_feed is scraping the tweets for a given twitter user.
+        @param twitter_user will be the twitter user, which tweets got scraped.
+        @return twitter_feed_list will return a list of all scraped tweets of a twitter user.
+        '''
         twitter_feed_list = []
         try:
             tweets = api.user_timeline(screen_name=twitter_user,
