@@ -15,7 +15,7 @@ def sanitize_title(unsanitized_title, servicename):
         @param servicename will be the name of the service calling this function.
     @return a sanitized title without any special chars except - in string format.
     '''
-    sanitized_title = ''
+    sanitized_title = unsanitized_title
     try:
         # Replace spaces with - in the first place for readability
         unsanitized_title = unsanitized_title.replace(' ', '-')

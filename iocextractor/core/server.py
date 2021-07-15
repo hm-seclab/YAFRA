@@ -11,8 +11,6 @@ import pytz
 import re
 import iocextract as ioce
 
-from libs.gitlabl.sanitize_title import sanitize_title
-
 sys.path.append('..')
 
 from io import StringIO
@@ -46,7 +44,7 @@ from libs.kafka.logging import LogMessage
 from libs.kafka.logging import send_health_message
 from libs.extensions.loader import load_extensions
 from libs.gitlabl.files import read_file_from_gitlab
-
+from libs.gitlabl.sanitize_title import sanitize_title
 # ENVIRONMENT-VARS
 SERVICENAME = envvar("SERVICENAME", "Extractor")
 IOC_TOPIC_NAME = envvar("IOC_TOPIC", "ioc")

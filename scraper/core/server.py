@@ -93,8 +93,8 @@ class Scraper(Server):
 
             data_list = [
                     *Scraper.__get_data_from_rss_feed(),
-                    *Scraper.__get_data_from_twitter_feed(),
-                    *Scraper.__get_data_from_api()]
+                    *Scraper.__get_data_from_twitter_feed()]
+                    # *Scraper.__get_data_from_api()
             for data in data_list:
                 Scraper.push_collected_data(data.__json__())
         except Exception as error:
