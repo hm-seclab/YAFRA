@@ -284,9 +284,9 @@ class Scraper(Server):
         twitter_content = {}
         try:
             if len(Scraper.SOURCES) <= 0:
-                with open(os.path.abspath("../../datasets/sources/api_sources.json")) as api_content, open(
-                    os.path.abspath("../../datasets/sources/rss_sources.json")) as rss_content, open(
-                    os.path.abspath("../../datasets/sources/twitter_sources.json")) as twitter_content:
+                with open(os.path.abspath("../datasets/sources/api_sources.json")) as api_content, open(
+                    os.path.abspath("../datasets/sources/rss_sources.json")) as rss_content, open(
+                    os.path.abspath("../datasets/sources/twitter_sources.json")) as twitter_content:
                     api_content = json.load(api_content)
                     rss_content = json.load(rss_content)
                     twitter_content = json.load(twitter_content)

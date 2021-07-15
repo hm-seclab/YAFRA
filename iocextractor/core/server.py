@@ -116,7 +116,7 @@ class Extractor(Server):
         content = {}
         try:
             if len(Extractor.BLACKLIST) <= 0:
-                with open(os.path.abspath("../../datasets/blacklist.json")) as content:
+                with open(os.path.abspath("../datasets/blacklist.json")) as content:
                     content = json.load(content)
             else:
                 content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, file="blacklist.json", servicename=SERVICENAME, branch_name="master")
