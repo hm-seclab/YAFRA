@@ -7,7 +7,6 @@ import os
 import sys
 import datetime
 import json
-from dateutil.parser import DEFAULTTZPARSER
 
 import pytz
 
@@ -91,9 +90,9 @@ class Scraper(Server):
         '''
         try:
             data_list = [
-                    #*Scraper.__get_data_from_rss_feed(),]
-                    *Scraper.__get_data_from_twitter_feed(),]
-                    #*Scraper.__get_data_from_api()]
+                    *Scraper.__get_data_from_rss_feed(),
+                    *Scraper.__get_data_from_twitter_feed()]
+                    # *Scraper.__get_data_from_api()
             for data in data_list:
                 Scraper.push_collected_data(data.__json__())
         except Exception as error:
@@ -106,8 +105,6 @@ class Scraper(Server):
         '''
         ret_val_list = []
         try:
-            print("Stepping into __get_data_from_rss_feed")
-
             rss_scraper = RssScraper
             url_list = Scraper.SOURCES["rss_sources"]
             for url in url_list:
@@ -155,7 +152,8 @@ class Scraper(Server):
                     data_object = DataObject(content, title, url, date)
                     ret_val_list.append(data_object)
 
-            print("Stepping out __get_data_from_rss_feed. Found " + str(len(ret_val_list)) + " rss-feeds.")
+            amount = str(len(ret_val_list))
+            LogMessage(f"Found {amount} rss-feeds.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
         return ret_val_list
@@ -193,7 +191,9 @@ class Scraper(Server):
 
                     data_object = DataObject(tweet.full_text, title, str(twitter_user), date)
                     ret_val_list.append(data_object)
-            LogMessage("Stepping out __get_data_from_twitter_feed. Found " + str(len(ret_val_list)) + " tweets.", LogMessage.LogTyp.INFO, SERVICENAME).log()
+
+            amount = str(len(ret_val_list))
+            LogMessage(f"Found {amount} tweets.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
         return ret_val_list
@@ -245,7 +245,8 @@ class Scraper(Server):
                     data_object = DataObject(api_response, title, url, date)
                     ret_val_list.append(data_object)
 
-            print("Stepping out __get_data_from_api. Found " + str(len(ret_val_list)) + " api responses.")
+            amount = str(len(ret_val_list))
+            LogMessage(f"Found {amount} api-responses.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
         return ret_val_list
