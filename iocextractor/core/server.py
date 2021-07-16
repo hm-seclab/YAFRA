@@ -108,7 +108,7 @@ class Extractor(Server):
         return render_template('index.html')
 
     @staticmethod
-    @scheduler.task("interval", id="refetch", seconds=30, timezone=pytz.UTC)
+    @scheduler.task("interval", id="refetch", seconds=60, timezone=pytz.UTC)
     def refetch_blacklist():
         '''
         refetch_blacklist will fetch the blacklist from the master every 30 seconds.
@@ -182,6 +182,7 @@ class Extractor(Server):
             yara_rules = [rule for rule in ioce.extract_yara_rules(pdftext)]
             iocs['yara_rules'] = yara_rules
             ex_ioc = Extractor.extensions(pdftext)
+            print("working")
             iocs = merge_dicts(iocs, filter_dict_values(ex_ioc, SERVICENAME), SERVICENAME)
             iocs = filter_by_blacklist(iocs, Extractor.BLACKLIST, SERVICENAME)
         except Exception as error:
@@ -243,14 +244,14 @@ class Extractor(Server):
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
     @staticmethod
+    @scheduler.task("interval", id="execute scraper data", minutes=10, timezone=pytz.UTC, misfire_grace_time=900)
     def consume_findings_from_scraper():
         '''
         consume_findings_from_scraper will consume all findings from KAFKA and
             push them into the gitlab repository.
         '''
         try:
-            consumer = KafkaConsumer(SCRAPER_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor',
-                                     api_version=(2, 7, 0), )
+            consumer = KafkaConsumer(SCRAPER_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor', api_version=(2, 7, 0), )
             for report in consumer:
                 Thread(target=Extractor.handle_scraper_feed, args=(report,), daemon=True).start()
         except Exception as error:

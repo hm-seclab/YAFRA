@@ -32,10 +32,10 @@ def replace_item(finding, findings_key, blocked, servicename):
         for f_key, f_values in finding.items():
             if isinstance(f_values, dict):
                 finding[f_key] = replace_item(f_values, findings_key, blocked, servicename)
-            if findings_key in finding:
+            if findings_key in finding and len(finding):
                 finding[findings_key] = list(filter(lambda x: x != blocked, finding[findings_key]))
     except Exception as error:
-        LogMessage(str(error)+"hh2", LogMessage.LogTyp.ERROR, servicename).log()
+        LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
     return finding
 
 def filter_by_blacklist(findings, blacklist, servicename):
@@ -46,12 +46,11 @@ def filter_by_blacklist(findings, blacklist, servicename):
     @servicename will be the name of the calling service.
     @return will return the filter findings as dict.
     '''
-
     try:
         if blacklist is not None:
             for name, blocks in blacklist.items():
                 for block in blocks:
-                    findings = replace_item(findings, name, block, servicename)
+                    return replace_item(findings, name, block, servicename)
     except Exception as error:
-        LogMessage(str(error)+"hh", LogMessage.LogTyp.ERROR, servicename).log()
-    return findings
+        LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
+    return {}

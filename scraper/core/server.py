@@ -90,8 +90,8 @@ class Scraper(Server):
         try:
             LogMessage("Starting to scrape data.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             data_list = [
-                    *Scraper.__get_data_from_rss_feed(),
-                    *Scraper.__get_data_from_twitter_feed()]
+                    *Scraper.__get_data_from_rss_feed(),]
+                    #*Scraper.__get_data_from_twitter_feed()]
                     # *Scraper.__get_data_from_api()
 
             LogMessage(f"Starting to push scraped data to Kafka Topic {SCRAPER_TOPIC_NAME}.", LogMessage.LogTyp.INFO, SERVICENAME).log()
