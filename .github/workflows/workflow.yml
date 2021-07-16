@@ -20,5 +20,5 @@ jobs:
                 pip install pylint
 
             - name: "Running the linter"
-              run: pylint iocpuller
+              run: pylint **/*.py
 
