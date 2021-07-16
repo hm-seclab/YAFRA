@@ -7,8 +7,6 @@ import json
 from datetime import datetime
 
 from enum import Enum
-from colorama import init as colorinit
-from termcolor import colored
 from kafka.producer import KafkaProducer
 
 from libs.core.environment import envvar
@@ -64,7 +62,6 @@ class LogMessage():
         self.mute = mute
         self.kafkaserver = envvar("KAFKA_SERVER", "0.0.0.0:9092")
         self.logging_topic = envvar("LOGGER_TOPIC", "logging")
-        colorinit()
         create_topic_if_not_exists(self.kafkaserver, self.logging_topic)
 
     def __json(self):
@@ -86,7 +83,7 @@ class LogMessage():
         '''
         try:
             if not self.mute:
-                print(colored("{} {}: {} - ({})".format(self.typ.value[1], self.typ.value[2], self.message, self.servicename), self.typ.value[0]))
+                print("{} {}: {} - ({})".format(self.typ.value[1], self.typ.value[2], self.message, self.servicename))
             producer = KafkaProducer(bootstrap_servers=self.kafkaserver, client_id='logging', api_version=(2, 7, 0))
             message = str(self.__json()).encode('UTF-8')
             producer.send(self.logging_topic, message)

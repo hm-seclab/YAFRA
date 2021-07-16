@@ -130,17 +130,18 @@ class Pusher(Server):
         @return a dict with more data about the finding.s
         '''
         improved_findings = {}
+        finding_keys = findings.keys() if findings is not None else {}
         try:
             cve_details, ipv4_details, domains_details, m_e_tactics, m_e_techniques = {}, {}, {}, {}, {}
-            if (cves := findings['cves']) is not None and len(cves) > 0:
+            if 'cves' in finding_keys and (cves := findings['cves']) is not None and len(cves) > 0:
                 cve_details = get_cve_information(cves, SERVICENAME)
-            if (ipv4s := findings['ipv4s']) is not None and len(ipv4s) > 0:
+            if 'ipv4s' in finding_keys and (ipv4s := findings['ipv4s']) is not None and len(ipv4s) > 0:
                 ipv4_details = get_vt_information_ipv4(VT_API_KEY, ipv4s, SERVICENAME)
-            if (domains := findings['domains']) is not None and len(domains) > 0:
+            if 'domains' in finding_keys and (domains := findings['domains']) is not None and len(domains) > 0:
                 domains_details = get_vt_information_domains(VT_API_KEY, domains, SERVICENAME)
-            if (mitre_attack_tac_ent := findings['attack_tactics']['enterprise']) is not None and len(mitre_attack_tac_ent) > 0:
+            if 'attack_tactics' in finding_keys and (mitre_attack_tac_ent := findings['attack_tactics']['enterprise']) is not None and len(mitre_attack_tac_ent) > 0:
                 m_e_tactics = get_mitre_information_tactics_enterpise(mitre_attack_tac_ent, SERVICENAME)
-            if (mitre_attack_tech_ent := findings['attack_techniques']['enterprise']) is not None and len(mitre_attack_tech_ent) > 0:
+            if 'attack_techniques' in finding_keys and (mitre_attack_tech_ent := findings['attack_techniques']['enterprise']) is not None and len(mitre_attack_tech_ent) > 0:
                 m_e_techniques = get_mitre_information_techniques_enterpise(mitre_attack_tech_ent, SERVICENAME)
             improved_findings = {
                 "cve": cve_details,
