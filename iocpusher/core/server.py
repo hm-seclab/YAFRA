@@ -87,7 +87,7 @@ class Pusher(Server):
     @staticmethod
     def add_misp_appearance(findings, improved_findings):
         '''
-        enrich the found iocs with misp information, atleast some of them.
+        enrich the found iocs with misp information, at least some of them.
         @param findings will a be an object with all findings.
         @param improved_findings will be all allready enriched findings by
             things like virus_total or circl.lu
@@ -224,6 +224,7 @@ class Pusher(Server):
                             'file_path': '{0}/Mitre/{1}.md'.format(report_name, filename),
                             'content': str(content)
                         })
+            LogMessage("A new markdown file has been created.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
         return data
@@ -236,6 +237,7 @@ class Pusher(Server):
         '''
         try:
             create_monthly_if_not_exists(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, servicename=SERVICENAME)
+            LogMessage("A new monthly branch has been created.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
@@ -244,7 +246,7 @@ class Pusher(Server):
         '''
         submit_report will submit the pull-request into the
             IoC-[CurrentDate]-Branch.
-        @param findings will be all findings in json/dict formtat.
+        @param findings will be all findings in json/dict format.
         '''
         try:
             findings = json.loads(findings.value.decode("utf-8"))
@@ -258,6 +260,7 @@ class Pusher(Server):
                             servicename=SERVICENAME,
                             title=report_name,
                             description="A report has been submitted. The name of the branch is: {}.".format(report_name))
+            LogMessage(f"Submitted a report into: {report_name}", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except gitlab.gitlab.GitlabCreateError as gc_error:
             LogMessage(str(gc_error), LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
@@ -277,6 +280,7 @@ class Pusher(Server):
             for report in consumer:
                 Thread(target=Pusher.submit_report, args=(gprojects, report,), daemon=True).start()
                 time.sleep(3)
+                LogMessage("Pushed a report to gitlab.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 

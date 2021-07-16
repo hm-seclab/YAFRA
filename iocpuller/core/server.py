@@ -115,6 +115,7 @@ class Puller(Server):
         branch_name = get_branch_name()
         latest_timestamp = None
         try:
+            LogMessage("Merging all PR's and fetch new data.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             if (latest_timestamp := Puller.latest_timestamp()) is None:
                 latest_timestamp = Puller.commit_timestamp(
                     get_latest_commit_hash_by_branch(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, branch=branch_name, servicename=SERVICENAME),

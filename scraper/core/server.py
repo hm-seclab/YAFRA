@@ -88,11 +88,13 @@ class Scraper(Server):
         collect_data_from_sources starts the collection process by scraping data from various given sources.
         '''
         try:
-            LogMessage(f"Stepping into function.", LogMessage.LogTyp.INFO, SERVICENAME).log()
+            LogMessage("Starting to scrape data.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             data_list = [
-                    #*Scraper.__get_data_from_rss_feed(),
+                    *Scraper.__get_data_from_rss_feed(),
                     *Scraper.__get_data_from_twitter_feed()]
                     # *Scraper.__get_data_from_api()
+
+            LogMessage(f"Starting to push scraped data to Kafka Topic {SCRAPER_TOPIC_NAME}.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             for data in data_list:
                 Scraper.push_collected_data(data.__json__())
             amount = str(len(data_list))
@@ -107,7 +109,7 @@ class Scraper(Server):
         '''
         ret_val_list = []
         try:
-            LogMessage(f"Stepping into function.", LogMessage.LogTyp.INFO, SERVICENAME).log()
+            LogMessage("Starting to scrape from rss feeds.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             rss_scraper = RssScraper
             url_list = Scraper.SOURCES["rss_sources"]
             for url in url_list:
@@ -168,7 +170,7 @@ class Scraper(Server):
         '''
         ret_val_list = []
         try:
-            LogMessage(f"Stepping into function.", LogMessage.LogTyp.INFO, SERVICENAME).log()
+            LogMessage("Starting to scrape from twitter feeds.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             twitter_scraper = TwitterScraper
             twitter_user_list = Scraper.SOURCES["twitter_sources"]
             for twitter_user in twitter_user_list:
@@ -208,7 +210,7 @@ class Scraper(Server):
         '''
         ret_val_list = []
         try:
-            LogMessage(f"Stepping into function.", LogMessage.LogTyp.INFO, SERVICENAME).log()
+            LogMessage("Starting to scrape from api's.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             api_scraper = ApiScraper
             url_list = Scraper.SOURCES["api_sources"]
 
@@ -277,8 +279,7 @@ class Scraper(Server):
         rss_content = {}
         twitter_content = {}
         try:
-            LogMessage(f"Stepping into function.", LogMessage.LogTyp.INFO, SERVICENAME).log()
-            if len(Scraper.SOURCES) <= 0:
+            if Scraper.SOURCES is None or len(Scraper.SOURCES) <= 0:
                 LogMessage("Datasources to scrape are empty. Get new datasources from local system.", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 with open(os.path.abspath("../datasets/sources/api_sources.json")) as api_content, open(
                     os.path.abspath("../datasets/sources/rss_sources.json")) as rss_content, open(
