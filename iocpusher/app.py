@@ -4,6 +4,7 @@ Server for the ioc-pusher service.
 
 from flask_script import Manager
 
+# pylint: disable=E0611
 from core.server import Pusher
 from core.server import flaskapp
 

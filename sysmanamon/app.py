@@ -2,6 +2,7 @@
 The entrypoint for the sysmon-service.
 '''
 
+# pylint: disable=E0611
 from core.server import Sysmonserver
 from core.server import flaskapp
 

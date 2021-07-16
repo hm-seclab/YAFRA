@@ -2,6 +2,7 @@
 Server for the ioc-extractor service.
 '''
 
+# pylint: disable=E0611
 from core.server import Extractor
 from core.server import flaskapp
 

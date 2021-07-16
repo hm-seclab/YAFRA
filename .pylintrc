@@ -10,7 +10,7 @@ fail-under=10
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
-ignore=CVS
+ignore=CVS, .github, assets, ENV, datasets, extensions, docs, docker-compose.optional.yml, docker-compose.yml, README.md, makefile, requirements.txt, .dockerignore, .gitignore, .git, .gitattributes, .env.example
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
@@ -60,7 +60,7 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable=E0401, R0903, C0301, W0703, R1729, R0914, R0913, W1401, E1305
+disable=E0401, R0903, C0301, W0703, R1729, R0914, R0913, W1401, E1305, C0413
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

@@ -4,6 +4,7 @@ Entrypoint for the IoC-Puller service.
 
 from flask_script import Manager
 
+# pylint: disable=E0611
 from core.server import Puller
 from core.server import flaskapp
 

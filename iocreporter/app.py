@@ -4,6 +4,7 @@ IoC-Reporter-Server.
 
 from flask_script import Manager
 
+# pylint: disable=E0611
 from core.server import Reporter
 from core.server import flaskapp
 

@@ -2,6 +2,7 @@
 Server for the scraper service.
 '''
 
+# pylint: disable=E0611
 from core.server import Scraper
 from core.server import flaskapp
 
