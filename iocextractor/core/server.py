@@ -115,7 +115,7 @@ class Extractor(Server):
         '''
         content = {}
         try:
-            if len(Extractor.BLACKLIST) <= 0:
+            if Extractor.BLACKLIST is None or len(Extractor.BLACKLIST) <= 0:
                 with open(os.path.abspath("../datasets/blacklist.json")) as content:
                     content = json.load(content)
             else:
