@@ -164,6 +164,7 @@ class Extractor(Server):
         return findings
 
     def extract_ioc(pdftext):
+        # pylint: disable=E0213
         '''
         extract_ioc will extract ioc from a given text all ioc.
         @param pdftext will be the text to search trough.
