@@ -88,6 +88,7 @@ class Reporter(Server):
             consumer = KafkaConsumer(REPORT_TOPIC, bootstrap_servers=KAFKA_SERVER, client_id='ioc_reporter', api_version=(2,7,0),)
             for report in consumer:
                 Thread(target=Reporter.push_misp_report, args=(report,), daemon=True).start()
+            LogMessage("New reports have been pushed to MISP.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 

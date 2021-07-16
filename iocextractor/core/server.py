@@ -111,16 +111,20 @@ class Extractor(Server):
     @scheduler.task("interval", id="refetch", seconds=30, timezone=pytz.UTC)
     def refetch_blacklist():
         '''
-        refetch_blacklist will fetch the blacklist from the master every 30 minutes.
+        refetch_blacklist will fetch the blacklist from the master every 30 seconds.
         '''
         content = {}
         try:
-            if len(Extractor.BLACKLIST) <= 0:
+            if Extractor.BLACKLIST is None or len(Extractor.BLACKLIST) <= 0:
+                LogMessage("The blacklist is empty. Get a new blacklist from local system.", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 with open(os.path.abspath("../datasets/blacklist.json")) as content:
                     content = json.load(content)
+                LogMessage("Using local blacklist.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             else:
+                LogMessage("Get new blacklist from gitlab.", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, file="blacklist.json", servicename=SERVICENAME, branch_name="master")
                 content = json.loads(content)
+                LogMessage("Using blacklist from gitlab.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             if content is not None:
                 Extractor.BLACKLIST = content
         except Exception as error:
@@ -133,6 +137,7 @@ class Extractor(Server):
         @param findings will be the findings.
         '''
         try:
+            LogMessage(f"Push findings to Kafka Topic {IOC_TOPIC_NAME}.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor', api_version=(2, 7, 0))
             message = str(json.dumps(findings)).encode('UTF-8')
             producer.send(IOC_TOPIC_NAME, message)
@@ -192,7 +197,7 @@ class Extractor(Server):
         '''
         try:
             pdf_content = StringIO()
-            print("Extracted ioc's from file: {}".format(reportpath))
+            LogMessage(f"Extract ioc's from file: {reportpath}", LogMessage.LogTyp.INFO, SERVICENAME).log()
             with open(reportpath, 'rb') as file:
                 resource_manager = PDFResourceManager()
                 device = TextConverter(resource_manager, pdf_content, laparams=LAParams())
@@ -205,6 +210,7 @@ class Extractor(Server):
             iocs['input_filename'] = input_filename
             Extractor.pushfindings(iocs)
             os.remove(reportpath)
+            LogMessage(f"The ioc's had been extracted for the file: {reportpath}", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
@@ -257,12 +263,14 @@ class Extractor(Server):
             in a file.
         '''
         try:
+            LogMessage("Searching for PDFs to extract ioc's from.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             if (reports := os.listdir(DOCKER_REPORTS_PATH)) is not None and len(reports) > 0:
                 threads = []
                 for report in reports:
                     if report.endswith(".pdf"):
                         threads.append(
                             Thread(target=Extractor.extract, args=(os.path.join(DOCKER_REPORTS_PATH, report),)))
+                        LogMessage("Starting a new thread for a report", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 for instance in threads:
                     instance.start()
                 for instance in threads:
