@@ -14,8 +14,12 @@ jobs:
             matrix:
                 python-version: [3.8, 3.9]
         steps:
-            - name: "Install dependencies"
-              run: pip install -r requirements.txt
+            - name: Install Python dependencies
+              uses: py-actions/py-dependency-install@v2
+              with:
+                update-pip: "false"
+                update-setuptools: "false"
+                update-wheel: "false"
             
             - name: "Running the linter"
               run: pylint *
