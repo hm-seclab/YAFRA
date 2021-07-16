@@ -3,9 +3,9 @@ This class will represent the reporter-server.
 '''
 
 # pylint: disable=C0413, C0411
+import inspect
 import os
 import sys
-import datetime
 import json
 
 import pytz
@@ -88,23 +88,28 @@ class Scraper(Server):
         '''
         collect_data_from_sources starts the collection process by scraping data from various given sources.
         '''
+        function_name = inspect.currentframe().f_code.co_name
         try:
+            LogMessage(f"Stepping into function {function_name}.", LogMessage.LogTyp.INFO, SERVICENAME, function_name).log()
+            print("t" + 11)
             data_list = [
-                    *Scraper.__get_data_from_rss_feed(),
+                    #*Scraper.__get_data_from_rss_feed(),
                     *Scraper.__get_data_from_twitter_feed()]
                     # *Scraper.__get_data_from_api()
             for data in data_list:
                 Scraper.push_collected_data(data.__json__())
         except Exception as error:
-            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME, function_name).log()
 
     @staticmethod
     def __get_data_from_rss_feed():
         '''
         __get_data_from_rss_feed scrapes all the given rss-feeds and stores them properly for further usage.
         '''
+        function_name = inspect.currentframe().f_code.co_name
         ret_val_list = []
         try:
+            LogMessage(f"Stepping into function {function_name}.", LogMessage.LogTyp.INFO, SERVICENAME, function_name).log()
             rss_scraper = RssScraper
             url_list = Scraper.SOURCES["rss_sources"]
             for url in url_list:
@@ -153,9 +158,9 @@ class Scraper(Server):
                     ret_val_list.append(data_object)
 
             amount = str(len(ret_val_list))
-            LogMessage(f"Found {amount} rss-feeds.", LogMessage.LogTyp.INFO, SERVICENAME).log()
+            LogMessage(f"Found {amount} rss-feeds.", LogMessage.LogTyp.INFO, SERVICENAME, function_name).log()
         except Exception as error:
-            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME, function_name).log()
         return ret_val_list
 
     @staticmethod
@@ -163,9 +168,10 @@ class Scraper(Server):
         '''
         __get_data_from_twitter_feed scrapes all the given tweets and stores them properly for further usage.
         '''
+        function_name = inspect.currentframe().f_code.co_name
         ret_val_list = []
         try:
-
+            LogMessage(f"Stepping into function {function_name}.", LogMessage.LogTyp.INFO, SERVICENAME, function_name).log()
             twitter_scraper = TwitterScraper
             twitter_user_list = Scraper.SOURCES["twitter_sources"]
             for twitter_user in twitter_user_list:
@@ -193,9 +199,9 @@ class Scraper(Server):
                     ret_val_list.append(data_object)
 
             amount = str(len(ret_val_list))
-            LogMessage(f"Found {amount} tweets.", LogMessage.LogTyp.INFO, SERVICENAME).log()
+            LogMessage(f"Found {amount} tweets.", LogMessage.LogTyp.INFO, SERVICENAME, function_name).log()
         except Exception as error:
-            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME, function_name).log()
         return ret_val_list
 
     @staticmethod
@@ -203,10 +209,10 @@ class Scraper(Server):
         '''
         __get_data_from_api scrapes all the given apis and stores the responses properly for further usage.
         '''
+        function_name = inspect.currentframe().f_code.co_name
         ret_val_list = []
         try:
-            print("Stepping into __get_data_from_api")
-
+            LogMessage(f"Stepping into function {function_name}.", LogMessage.LogTyp.INFO, SERVICENAME, function_name).log()
             api_scraper = ApiScraper
             url_list = Scraper.SOURCES["api_sources"]
 
@@ -246,18 +252,10 @@ class Scraper(Server):
                     ret_val_list.append(data_object)
 
             amount = str(len(ret_val_list))
-            LogMessage(f"Found {amount} api-responses.", LogMessage.LogTyp.INFO, SERVICENAME).log()
+            LogMessage(f"Found {amount} api-responses.", LogMessage.LogTyp.INFO, SERVICENAME, function_name).log()
         except Exception as error:
-            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME, function_name).log()
         return ret_val_list
-
-    @staticmethod
-    def __datetime_converter(o):
-        '''
-        helper method for converting the datetime
-        '''
-        if isinstance(o, datetime.datetime):
-            return o.__str__()
 
     @staticmethod
     def push_collected_data(data):
@@ -265,12 +263,13 @@ class Scraper(Server):
         push_collected_data will push all collected data to KAFKA.
         @param data will be the data.
         '''
+        function_name = inspect.currentframe().f_code.co_name
         try:
             producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER, client_id='scraper', api_version=(2, 7, 0))
             message = str(json.dumps(data)).encode('UTF-8')
             producer.send(SCRAPER_TOPIC_NAME, message)
         except Exception as error:
-            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME, function_name).log()
 
     @staticmethod
     @scheduler.task("cron", id="refetch", week='*', day_of_week='*', hour=3, timezone=pytz.UTC)
@@ -278,12 +277,15 @@ class Scraper(Server):
         '''
         refetch_sources will fetch the relevant sources to scrape from the branch datasources once a day.
         '''
+        function_name = inspect.currentframe().f_code.co_name
         content = {}
         api_content = {}
         rss_content = {}
         twitter_content = {}
         try:
+            LogMessage(f"Stepping into function {function_name}.", LogMessage.LogTyp.INFO, SERVICENAME, function_name).log()
             if len(Scraper.SOURCES) <= 0:
+                LogMessage("Datasources to scrape are empty. Get new datasources from local system.", LogMessage.LogTyp.INFO, SERVICENAME, function_name).log()
                 with open(os.path.abspath("../datasets/sources/api_sources.json")) as api_content, open(
                     os.path.abspath("../datasets/sources/rss_sources.json")) as rss_content, open(
                     os.path.abspath("../datasets/sources/twitter_sources.json")) as twitter_content:
@@ -291,6 +293,7 @@ class Scraper(Server):
                     rss_content = json.load(rss_content)
                     twitter_content = json.load(twitter_content)
             else:
+                LogMessage("Get new datasources from gitlab.", LogMessage.LogTyp.INFO, SERVICENAME, function_name).log()
                 api_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
                                                     file="api_sources.json", servicename=SERVICENAME, branch_name="datasources")
                 rss_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
@@ -307,7 +310,7 @@ class Scraper(Server):
             if content is not None:
                 Scraper.SOURCES = content
         except Exception as error:
-            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME, function_name).log()
 
     def __call__(self, app, *args, **kwargs):
         '''
