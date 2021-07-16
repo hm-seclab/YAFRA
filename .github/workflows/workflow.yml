@@ -1,4 +1,4 @@
-name:   Dev Workflow
+name: Build and quality check
 on:
     push:
         branches:

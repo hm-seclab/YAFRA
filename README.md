@@ -1,5 +1,9 @@
 # YAFRA
 
+[![Dev Workflow](https://github.com/hm-seclab/YAFRA/actions/workflows/workflow.yml/badge.svg?branch=master)](https://github.com/hm-seclab/YAFRA/actions/workflows/workflow.yml)
+
+
+
 YAFRA stands for `[y]et [a]nother [f]ramework for [r]eport [a]nalysis `
 
 ## Description
