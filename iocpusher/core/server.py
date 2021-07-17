@@ -83,6 +83,7 @@ class Pusher(Server):
     '''
 
     EXTENSIONS = list(filter(lambda ext: ext.in_report(), load_extensions(SERVICENAME)))
+    PUSHER_THREAD = None
 
     @staticmethod
     def add_misp_appearance(findings, improved_findings):
@@ -198,7 +199,7 @@ class Pusher(Server):
         '''
         data = {}
         try:
-            markdown, mitre_files, im_fin = Pusher.generate_markdown(findings)
+            markdown, mitre_files, _ = Pusher.generate_markdown(findings)
             data = {
                 'branch': report_name,
                 'commit_message': 'Commited a report: {}'.format(report_name),
@@ -281,6 +282,19 @@ class Pusher(Server):
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
+    @staticmethod
+    @scheduler.task("interval", id="health_push", minutes=2, timezone=pytz.UTC)
+    def recover_pusher_thread():
+        '''
+        
+        '''
+        try:
+            if Pusher.PUSHER_THREAD is None or not Pusher.PUSHER_THREAD.is_alive():
+                Pusher.PUSHER_THREAD = Thread(target=Pusher.consume_findings, daemon=True).start()
+                LogMessage("Recovering the pusher thread", LogMessage.LogTyp.INFO, SERVICENAME).log()
+        except Exception as error:
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+
     def __call__(self, app, *args, **kwargs):
         '''
         __call__ override __call__ function from server-class.
@@ -288,7 +302,7 @@ class Pusher(Server):
         attack = Attck(nested_subtechniques=False)
         attack.update()
         create_repository_if_not_exists(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, servicename=SERVICENAME)
-        Thread(target=Pusher.consume_findings, daemon=True).start()
+        Pusher.PUSHER_THREAD = Thread(target=Pusher.consume_findings, daemon=True).start()
         Pusher.create_monthly_branch()
         scheduler.start()
         return Server.__call__(self, app, *args, **kwargs)
