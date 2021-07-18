@@ -7,6 +7,7 @@ This class will represent the iocpusher-server.
 import sys
 import time
 import json
+import datetime
 import random
 import pytz
 import gitlab
@@ -82,8 +83,24 @@ class Pusher(Server):
         and push it to gitlab.
     '''
 
+    @staticmethod
+    def get_repository_handle(): #TODO move to lib
+        '''
+
+        '''
+        try:
+            gitlab_instance = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN, ssl_verify=GITLAB_CERT_VERIFY)
+            projectid = get_projectid_by_name(gitlab_instance, GITLAB_REPO_NAME, SERVICENAME)
+            gprojects = gitlab_instance.projects.get(projectid)
+            return gprojects
+        except Exception as error:
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            return None
+
     EXTENSIONS = list(filter(lambda ext: ext.in_report(), load_extensions(SERVICENAME)))
     PUSHER_THREAD = None
+    BACKOFF_TIMER = 5
+    GPROJECT = None
 
     @staticmethod
     def add_misp_appearance(findings, improved_findings):
@@ -242,7 +259,7 @@ class Pusher(Server):
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
     @staticmethod
-    def submit_report(gprojects, findings):
+    def submit_report(findings):
         '''
         submit_report will submit the pull-request into the
             IoC-[CurrentDate]-Branch.
@@ -251,9 +268,9 @@ class Pusher(Server):
         try:
             findings = json.loads(findings.value.decode("utf-8"))
             report_name = findings['input_filename'] if 'input_filename' in findings.keys() else random.randint(4, 10000)
-            gprojects.branches.create({'branch': report_name, 'ref': get_branch_name()})
+            Pusher.GPROJECT.branches.create({'branch': report_name, 'ref': get_branch_name()})
             data = Pusher.create_markdown(findings, report_name)
-            _ = gprojects.commits.create(data)
+            _ = Pusher.GPROJECT.commits.create(data)
             create_issues(  gitlabserver=GITLAB_SERVER,
                             token=GITLAB_TOKEN,
                             repository=GITLAB_REPO_NAME,
@@ -263,6 +280,11 @@ class Pusher(Server):
         except gitlab.gitlab.GitlabCreateError as gc_error:
             LogMessage(str(gc_error), LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
+            if 'response_code' in dir(error) and (error.response_code == 500 or error.response_code == 502):
+                Pusher.BACKOFF_TIMER += 15
+                Pusher.TIME_SINCE_EXCEPTION = datetime.datetime.now()
+                Pusher.GPROJECT = Pusher.get_repository_handle()
+                Pusher.submit_report(findings)
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
     @staticmethod
@@ -273,12 +295,29 @@ class Pusher(Server):
         '''
         try:
             consumer = KafkaConsumer(IOC_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_pusher', api_version=(2, 7, 0),)
-            gitlab_instance = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN, ssl_verify=GITLAB_CERT_VERIFY)
-            projectid = get_projectid_by_name(gitlab_instance, GITLAB_REPO_NAME, SERVICENAME)
-            gprojects = gitlab_instance.projects.get(projectid)
             for report in consumer:
-                Thread(target=Pusher.submit_report, args=(gprojects, report,), daemon=True).start()
-                time.sleep(3)
+                Thread(target=Pusher.submit_report, args=(report,), daemon=True).start()
+                time.sleep(Pusher.BACKOFF_TIMER)
+        except Exception as error:
+            if 'response_code' in dir(error) and (error.response_code == 500 or error.response_code == 502):
+                Pusher.GPROJECT = Pusher.get_repository_handle()
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+
+    @staticmethod
+    @scheduler.task("interval", id="clear_timer", minutes=2, timezone=pytz.UTC)
+    def clear_backoff_timer():
+        '''
+        clear_backoff_timer will check the last time a exception occurred.
+            In case it is more than 5 minutes it will clear the timer and
+            set it back to 5 seconds.
+        '''
+        try:
+            current_time = datetime.datetime.now()
+            difference = current_time - Pusher.TIME_SINCE_EXCEPTION
+            difference = difference.seconds // 60 % 60
+            if Pusher.BACKOFF_TIMER > 5 and difference >= 5:
+                LogMessage("Reseting the backoff time for the pusher", LogMessage.LogTyp.ERROR, SERVICENAME).log()
+                Pusher.BACKOFF_TIMER = 5
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
@@ -286,7 +325,8 @@ class Pusher(Server):
     @scheduler.task("interval", id="health_push", minutes=2, timezone=pytz.UTC)
     def recover_pusher_thread():
         '''
-        
+        recover_pusher_thread will check every 2 minutes whether the pusher thread is still alive or not.
+            In Case it is not a new thread will be created and started.
         '''
         try:
             if Pusher.PUSHER_THREAD is None or not Pusher.PUSHER_THREAD.is_alive():
@@ -303,6 +343,7 @@ class Pusher(Server):
         attack.update()
         create_repository_if_not_exists(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, servicename=SERVICENAME)
         Pusher.PUSHER_THREAD = Thread(target=Pusher.consume_findings, daemon=True).start()
+        Pusher.GPROJECT = Pusher.get_repository_handle()
         Pusher.create_monthly_branch()
         scheduler.start()
         return Server.__call__(self, app, *args, **kwargs)

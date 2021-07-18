@@ -90,9 +90,9 @@ class Scraper(Server):
         '''
         try:
             data_list = [
-                    #*Scraper.__get_data_from_rss_feed(),
-                    #*Scraper.__get_data_from_twitter_feed()]
-                     *Scraper.__get_data_from_api()]
+                    *Scraper.__get_data_from_rss_feed(),
+                    *Scraper.__get_data_from_twitter_feed(),
+                    *Scraper.__get_data_from_api()]
             for data in data_list: Scraper.push_collected_data(data.__json__())
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
@@ -212,14 +212,6 @@ class Scraper(Server):
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
         return ret_val_list
-
-    @staticmethod
-    def __datetime_converter(o):
-        '''
-        helper method for converting the datetime
-        '''
-        if isinstance(o, datetime.datetime):
-            return o.__str__()
 
     @staticmethod
     def push_collected_data(data):
