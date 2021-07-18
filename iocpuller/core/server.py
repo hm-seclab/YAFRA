@@ -106,7 +106,7 @@ class Puller(Server):
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
         return v_last_timestamp
 
-    @scheduler.task("interval", id="execute", seconds=10, timezone=pytz.UTC, misfire_grace_time=900)
+    @scheduler.task("interval", id="execute", seconds=30, timezone=pytz.UTC, misfire_grace_time=900)
     def execute():
         '''
         execute will merge all pull-request an fetch the new data in order to send it into the
