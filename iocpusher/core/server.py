@@ -100,6 +100,7 @@ class Pusher(Server):
     EXTENSIONS = list(filter(lambda ext: ext.in_report(), load_extensions(SERVICENAME)))
     PUSHER_THREAD = None
     BACKOFF_TIMER = 5
+    TIME_SINCE_EXCEPTION = None
     GPROJECT = None
 
     @staticmethod
@@ -311,10 +312,12 @@ class Pusher(Server):
             In case it is more than 5 minutes it will clear the timer and
             set it back to 5 seconds.
         '''
+        difference = 0
         try:
             current_time = datetime.datetime.now()
-            difference = current_time - Pusher.TIME_SINCE_EXCEPTION
-            difference = difference.seconds // 60 % 60
+            if Pusher.TIME_SINCE_EXCEPTION is not None:
+                difference = current_time - Pusher.TIME_SINCE_EXCEPTION
+                difference = difference.seconds // 60 % 60
             if Pusher.BACKOFF_TIMER > 5 and difference >= 5:
                 LogMessage("Reseting the backoff time for the pusher", LogMessage.LogTyp.ERROR, SERVICENAME).log()
                 Pusher.BACKOFF_TIMER = 5

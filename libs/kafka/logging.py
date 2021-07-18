@@ -1,8 +1,9 @@
 '''
 This script contains functions and classes related to logging.
 '''
-
+import inspect
 import json
+import threading
 
 from datetime import datetime
 
@@ -59,6 +60,14 @@ class LogMessage():
         self.message = message
         self.typ = typ
         self.servicename = servicename
+        try:
+            self.functionname = inspect.stack()[1][3]    
+        except Exception:
+            self.functionname = "Unknown"
+        try:
+            self.thread_id = threading.get_ident()
+        except Exception:
+            self.thread_id = -1
         self.mute = mute
         self.kafkaserver = envvar("KAFKA_SERVER", "0.0.0.0:9092")
         self.logging_topic = envvar("LOGGER_TOPIC", "logging")
@@ -73,7 +82,8 @@ class LogMessage():
         return json.dumps({
             "typ": self.typ.value[2],
             "message": self.message,
-            "service": self.servicename
+            "service": self.servicename,
+            "function": self.functionname
         })
 
     def log(self):
@@ -83,7 +93,7 @@ class LogMessage():
         '''
         try:
             if not self.mute:
-                print("{} {}: {} - ({})".format(self.typ.value[1], self.typ.value[2], self.message, self.servicename))
+                print("{} {}: {} - ({}: {}) - Thread ID: {}".format(self.typ.value[1], self.typ.value[2], self.message, self.servicename, self.functionname, self.thread_id))
             producer = KafkaProducer(bootstrap_servers=self.kafkaserver, client_id='logging', api_version=(2, 7, 0))
             message = str(self.__json()).encode('UTF-8')
             producer.send(self.logging_topic, message)
