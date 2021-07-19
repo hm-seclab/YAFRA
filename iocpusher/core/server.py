@@ -9,6 +9,7 @@ import time
 import json
 import datetime
 import random
+import requests
 import pytz
 import gitlab
 sys.path.append('..')
@@ -279,13 +280,17 @@ class Pusher(Server):
                             title=report_name,
                             description="A report has been submitted. The name of the branch is: {}.".format(report_name))
         except gitlab.gitlab.GitlabCreateError as gc_error:
-            LogMessage(str(gc_error), LogMessage.LogTyp.INFO, SERVICENAME).log()
+            LogMessage(str(gc_error), LogMessage.LogTyp.ERROR, SERVICENAME).log() 
+            #GitLab is in her. SWITCH between 400 and 500 and 502
+        except requests.exceptions.ConnectionError:
+            Pusher.BACKOFF_TIMER += 120
+            Pusher.TIME_SINCE_EXCEPTION = datetime.datetime.now()
+            Pusher.GPROJECT = Pusher.get_repository_handle()
+            time.sleep(Pusher.BACKOFF_TIMER)
+            Pusher.submit_report(findings)
         except Exception as error:
-            if 'response_code' in dir(error) and (error.response_code == 500 or error.response_code == 502):
-                Pusher.BACKOFF_TIMER += 15
-                Pusher.TIME_SINCE_EXCEPTION = datetime.datetime.now()
-                Pusher.GPROJECT = Pusher.get_repository_handle()
-                Pusher.submit_report(findings)
+            Pusher.BACKOFF_TIMER += 15
+            Pusher.TIME_SINCE_EXCEPTION = datetime.datetime.now()
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
     @staticmethod
@@ -297,8 +302,8 @@ class Pusher(Server):
         try:
             consumer = KafkaConsumer(IOC_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_pusher', api_version=(2, 7, 0),)
             for report in consumer:
-                Thread(target=Pusher.submit_report, args=(report,), daemon=True).start()
                 time.sleep(Pusher.BACKOFF_TIMER)
+                Thread(target=Pusher.submit_report, args=(report,), daemon=True).start()
         except Exception as error:
             if 'response_code' in dir(error) and (error.response_code == 500 or error.response_code == 502):
                 Pusher.GPROJECT = Pusher.get_repository_handle()

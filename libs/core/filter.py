@@ -35,7 +35,7 @@ def replace_item(finding, findings_key, blocked, servicename):
             if findings_key in finding:
                 finding[findings_key] = list(filter(lambda x: x != blocked, finding[findings_key]))
     except Exception as error:
-        LogMessage(str(error)+"hh2", LogMessage.LogTyp.ERROR, servicename).log()
+        LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
     return finding
 
 def filter_by_blacklist(findings, blacklist, servicename):
@@ -53,5 +53,5 @@ def filter_by_blacklist(findings, blacklist, servicename):
                 for block in blocks:
                     findings = replace_item(findings, name, block, servicename)
     except Exception as error:
-        LogMessage(str(error)+"hh", LogMessage.LogTyp.ERROR, servicename).log()
+        LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
     return findings
