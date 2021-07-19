@@ -89,11 +89,16 @@ class Scraper(Server):
         collect_data_from_sources starts the collection process by scraping data from various given sources.
         '''
         try:
+            LogMessage("Starting to scrape data.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             data_list = [
                     *Scraper.__get_data_from_rss_feed(),
                     *Scraper.__get_data_from_twitter_feed(),
                     *Scraper.__get_data_from_api()]
+            LogMessage(f"Starting to push scraped data to Kafka Topic {SCRAPER_TOPIC_NAME}.", LogMessage.LogTyp.INFO,
+                       SERVICENAME).log()
             for data in data_list: Scraper.push_collected_data(data.__json__())
+            amount = str(len(data_list))
+            LogMessage(f"Pushed {amount} to Kafka Topic {SCRAPER_TOPIC_NAME}.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
@@ -104,6 +109,7 @@ class Scraper(Server):
         '''
         ret_val_list = []
         try:
+            LogMessage("Starting to scrape from rss feeds.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             rss_scraper = RssScraper
             url_list = Scraper.SOURCES["rss_sources"]
             for url in url_list:
@@ -164,7 +170,7 @@ class Scraper(Server):
         '''
         ret_val_list = []
         try:
-
+            LogMessage("Starting to scrape from twitter feeds.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             twitter_scraper = TwitterScraper
             twitter_user_list = Scraper.SOURCES["twitter_sources"]
             for twitter_user in twitter_user_list:
@@ -190,7 +196,7 @@ class Scraper(Server):
         '''
         ret_val_list = []
         try:
-            print("Stepping into __get_data_from_api")
+            LogMessage("Starting to scrape from api's.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             api_scraper = ApiScraper
             url_list = Scraper.SOURCES["api_sources"]
             for url in url_list:
@@ -237,7 +243,8 @@ class Scraper(Server):
         rss_content = {}
         twitter_content = {}
         try:
-            if len(Scraper.SOURCES) <= 0:
+            if Scraper.SOURCES is None or len(Scraper.SOURCES) <= 0:
+                LogMessage("Using local datasources.", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 with open(os.path.abspath("../datasets/sources/api_sources.json")) as api_content, open(
                     os.path.abspath("../datasets/sources/rss_sources.json")) as rss_content, open(
                     os.path.abspath("../datasets/sources/twitter_sources.json")) as twitter_content:
@@ -245,6 +252,7 @@ class Scraper(Server):
                     rss_content = json.load(rss_content)
                     twitter_content = json.load(twitter_content)
             else:
+                LogMessage("Using datasources from gitlab.", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 api_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
                                                     file="api_sources.json", servicename=SERVICENAME, branch_name="datasources")
                 rss_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,

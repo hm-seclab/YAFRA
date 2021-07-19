@@ -116,9 +116,11 @@ class Extractor(Server):
         content = {}
         try:
             if Extractor.BLACKLIST is None or len(Extractor.BLACKLIST) <= 0:
+                LogMessage("Using local blacklist.", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 with open(os.path.abspath("../datasets/blacklist.json")) as content:
                     content = json.load(content)
             else:
+                LogMessage("Using blacklist from gitlab.", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, file="blacklist.json", servicename=SERVICENAME, branch_name="master")
                 content = json.loads(content)
             if content is not None:
@@ -192,7 +194,7 @@ class Extractor(Server):
         '''
         try:
             pdf_content = StringIO()
-            print("Extracted ioc's from file: {}".format(reportpath))
+            LogMessage(f"Extract ioc's from file: {reportpath}", LogMessage.LogTyp.INFO, SERVICENAME).log()
             with open(reportpath, 'rb') as file:
                 resource_manager = PDFResourceManager()
                 device = TextConverter(resource_manager, pdf_content, laparams=LAParams())
@@ -205,6 +207,7 @@ class Extractor(Server):
             iocs['input_filename'] = input_filename
             Extractor.pushfindings(iocs)
             os.remove(reportpath)
+            LogMessage(f"The ioc's had been extracted from the file and the file has been removed: {reportpath}", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
