@@ -8,8 +8,6 @@ import threading
 from datetime import datetime
 
 from enum import Enum
-from colorama import init as colorinit
-from termcolor import colored
 from kafka.producer import KafkaProducer
 
 from libs.core.environment import envvar
@@ -62,12 +60,17 @@ class LogMessage():
         self.message = message
         self.typ = typ
         self.servicename = servicename
-        self.functionname = inspect.stack()[1][3]
-        self.thread_id = threading.get_ident()
+        try:
+            self.functionname = inspect.stack()[1][3]    
+        except Exception:
+            self.functionname = "Unknown"
+        try:
+            self.thread_id = threading.get_ident()
+        except Exception:
+            self.thread_id = -1
         self.mute = mute
         self.kafkaserver = envvar("KAFKA_SERVER", "0.0.0.0:9092")
         self.logging_topic = envvar("LOGGER_TOPIC", "logging")
-        colorinit()
         create_topic_if_not_exists(self.kafkaserver, self.logging_topic)
 
     def __json(self):
@@ -90,7 +93,7 @@ class LogMessage():
         '''
         try:
             if not self.mute:
-                print(colored("{} {}: {} - ({}: {}) - Thread ID: {}".format(self.typ.value[1], self.typ.value[2], self.message, self.servicename, self.functionname, self.thread_id), self.typ.value[0]))
+                print("{} {}: {} - ({}: {}) - Thread ID: {}".format(self.typ.value[1], self.typ.value[2], self.message, self.servicename, self.functionname, self.thread_id))
             producer = KafkaProducer(bootstrap_servers=self.kafkaserver, client_id='logging', api_version=(2, 7, 0))
             message = str(self.__json()).encode('UTF-8')
             producer.send(self.logging_topic, message)

@@ -108,23 +108,19 @@ class Extractor(Server):
         return render_template('index.html')
 
     @staticmethod
-    @scheduler.task("interval", id="refetch", seconds=60, timezone=pytz.UTC)
+    @scheduler.task("interval", id="refetch", seconds=30, timezone=pytz.UTC)
     def refetch_blacklist():
         '''
-        refetch_blacklist will fetch the blacklist from the master every 30 seconds.
+        refetch_blacklist will fetch the blacklist from the master every 30 minutes.
         '''
         content = {}
         try:
             if Extractor.BLACKLIST is None or len(Extractor.BLACKLIST) <= 0:
-                LogMessage("The blacklist is empty. Get a new blacklist from local system.", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 with open(os.path.abspath("../datasets/blacklist.json")) as content:
                     content = json.load(content)
-                LogMessage("Using local blacklist.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             else:
-                LogMessage("Get new blacklist from gitlab.", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, file="blacklist.json", servicename=SERVICENAME, branch_name="master")
                 content = json.loads(content)
-                LogMessage("Using blacklist from gitlab.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             if content is not None:
                 Extractor.BLACKLIST = content
         except Exception as error:
@@ -137,7 +133,6 @@ class Extractor(Server):
         @param findings will be the findings.
         '''
         try:
-            LogMessage(f"Push findings to Kafka Topic {IOC_TOPIC_NAME}.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor', api_version=(2, 7, 0))
             message = str(json.dumps(findings)).encode('UTF-8')
             producer.send(IOC_TOPIC_NAME, message)
@@ -169,7 +164,6 @@ class Extractor(Server):
         return findings
 
     def extract_ioc(pdftext):
-        # pylint: disable=E0213
         '''
         extract_ioc will extract ioc from a given text all ioc.
         @param pdftext will be the text to search trough.
@@ -182,7 +176,6 @@ class Extractor(Server):
             yara_rules = [rule for rule in ioce.extract_yara_rules(pdftext)]
             iocs['yara_rules'] = yara_rules
             ex_ioc = Extractor.extensions(pdftext)
-            print("working")
             iocs = merge_dicts(iocs, filter_dict_values(ex_ioc, SERVICENAME), SERVICENAME)
             iocs = filter_by_blacklist(iocs, Extractor.BLACKLIST, SERVICENAME)
         except Exception as error:
@@ -199,7 +192,7 @@ class Extractor(Server):
         '''
         try:
             pdf_content = StringIO()
-            LogMessage(f"Extract ioc's from file: {reportpath}", LogMessage.LogTyp.INFO, SERVICENAME).log()
+            print("Extracted ioc's from file: {}".format(reportpath))
             with open(reportpath, 'rb') as file:
                 resource_manager = PDFResourceManager()
                 device = TextConverter(resource_manager, pdf_content, laparams=LAParams())
@@ -212,7 +205,6 @@ class Extractor(Server):
             iocs['input_filename'] = input_filename
             Extractor.pushfindings(iocs)
             os.remove(reportpath)
-            LogMessage(f"The ioc's had been extracted for the file: {reportpath}", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
@@ -244,14 +236,14 @@ class Extractor(Server):
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
     @staticmethod
-    @scheduler.task("interval", id="execute scraper data", minutes=10, timezone=pytz.UTC, misfire_grace_time=900)
     def consume_findings_from_scraper():
         '''
         consume_findings_from_scraper will consume all findings from KAFKA and
             push them into the gitlab repository.
         '''
         try:
-            consumer = KafkaConsumer(SCRAPER_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor', api_version=(2, 7, 0), )
+            consumer = KafkaConsumer(SCRAPER_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_extractor',
+                                     api_version=(2, 7, 0), )
             for report in consumer:
                 Thread(target=Extractor.handle_scraper_feed, args=(report,), daemon=True).start()
         except Exception as error:
@@ -265,14 +257,12 @@ class Extractor(Server):
             in a file.
         '''
         try:
-            LogMessage("Searching for PDFs to extract ioc's from.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             if (reports := os.listdir(DOCKER_REPORTS_PATH)) is not None and len(reports) > 0:
                 threads = []
                 for report in reports:
                     if report.endswith(".pdf"):
                         threads.append(
                             Thread(target=Extractor.extract, args=(os.path.join(DOCKER_REPORTS_PATH, report),)))
-                        LogMessage("Starting a new thread for a report", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 for instance in threads:
                     instance.start()
                 for instance in threads:
