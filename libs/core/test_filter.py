@@ -4,7 +4,7 @@ Tests for filter.py
 
 from unittest import TestCase
 
-from filter import filter_dict_values, replace_item, filter_by_blacklist
+from libs.core.filter import filter_dict_values, replace_item, filter_by_blacklist
 
 
 class FilterTests(TestCase):
