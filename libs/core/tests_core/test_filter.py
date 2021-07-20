@@ -3,8 +3,10 @@ Tests for filter.py
 '''
 
 from unittest import TestCase
+from unittest.mock import patch
 
 from libs.core.filter import filter_dict_values, replace_item, filter_by_blacklist
+from libs.kafka.logging import LogMessage
 
 
 class FilterTests(TestCase):
@@ -24,13 +26,14 @@ class FilterTests(TestCase):
         self.assertIsInstance(output, dict)
         self.assertTrue(len(output) == 0)
 
-    # TODO cannot check for thrown exceptions at the moment, because the logger is running in a loop.
-    # def test_filter_dict_values_throws_exception_when_given_None_as_dict(self):
-    #     '''
-    #     Test to check if the function throws an exception,
-    #     when None has been given as a dict parameter.
-    #     '''
-    #     self.assertRaises(Exception, filter_dict_values(None, "TEST_SERVICENAME"))
+    def test_filter_dict_values_throws_exception_when_given_None_as_dict(self):
+        '''
+        Test to check if the function throws an exception,
+        when None has been given as a dict parameter.
+        '''
+
+        with patch.object(LogMessage, "log", return_value="ERROR"):
+            self.assertRaises(Exception, filter_dict_values(None, "TEST_SERVICENAME"))
 
     def test_filter_dict_values_returns_a_dict_with_lists_when_given_a_dict_with_lists_only(self):
         '''
@@ -113,14 +116,14 @@ class FilterTests(TestCase):
         self.assertIsInstance(output, dict)
         self.assertTrue(len(output) == 0)
 
-    # TODO cannot check for thrown exceptions at the moment, because the logger is running in a loop.
-    # def test_replace_item_throws_exception_when_given_None_as_dict(self):
-    #     '''
-    #     Test to check if the function throws an exception,
-    #     when None has been given as a dict parameter.
-    #     '''
-    #
-    #     self.assertRaises(Exception, replace_item(None, "key1", "finding_to_be_blocked_1", "TEST_SERVICENAME"))
+    def test_replace_item_throws_exception_when_given_None_as_dict(self):
+        '''
+        Test to check if the function throws an exception,
+        when None has been given as a dict parameter.
+        '''
+
+        with patch.object(LogMessage, "log", return_value="ERROR"):
+            self.assertRaises(Exception, replace_item(None, "key1", "finding_to_be_blocked_1", "TEST_SERVICENAME"))
 
     def test_replace_items_returns_unchanged_dict_if_the_block_key_is_empty(self):
         '''
@@ -245,18 +248,18 @@ class FilterTests(TestCase):
         self.assertIsInstance(output, dict)
         self.assertTrue(len(output) == 0)
 
-    # TODO cannot check for thrown exceptions at the moment, because the logger is running in a loop.
-    # def test_filter_by_blacklist_throws_exception_when_findings_dict_is_None(self):
-    #     '''
-    #     Test to check if the function throws an exception,
-    #     when None has been given as a finding dict parameter.
-    #     '''
-    #
-    #     test_blacklist_dict = {}
-    #     test_blacklist_dict["key1"] = ["finding_to_be_blocked_1"]
-    #     test_blacklist_dict["key2"] = ["finding_to_be_blocked_2"]
-    #
-    #     self.assertRaises(Exception, filter_by_blacklist(None, test_blacklist_dict, "TEST_SERVICENAME"))
+    def test_filter_by_blacklist_throws_exception_when_findings_dict_is_None(self):
+        '''
+        Test to check if the function throws an exception,
+        when None has been given as a finding dict parameter.
+        '''
+
+        test_blacklist_dict = {}
+        test_blacklist_dict["key1"] = ["finding_to_be_blocked_1"]
+        test_blacklist_dict["key2"] = ["finding_to_be_blocked_2"]
+
+        with patch.object(LogMessage, "log", return_value="ERROR"):
+            self.assertRaises(Exception, filter_by_blacklist(None, test_blacklist_dict, "TEST_SERVICENAME"))
 
     def test_filter_by_blacklist_returns_unchanged_dict_when_given_empty_blacklist_dict(self):
         '''
@@ -323,7 +326,7 @@ class FilterTests(TestCase):
         self.assertTrue(len(output["key1"]) == 3)
         self.assertTrue(len(output["key2"]) == 4)
 
-    def test_filter_by_blacklist(self):
+    def test_filter_by_blacklist_returns_findings_without_blocked_values_for_multiple_keys(self):
         '''
         Test to check if the function removes multiple given value for a given key
         and returns a dict, without this value.
