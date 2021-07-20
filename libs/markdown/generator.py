@@ -11,8 +11,8 @@ from collections import Counter
 from mdutils.mdutils import MdUtils
 
 from libs.kafka.logging import LogMessage
-from libs.countrycodes.iso_hanlder import convert_alpha_2_to_alpha_3
-from libs.countrycodes.iso_hanlder import convert_alpha_2_to_qualified_name
+from libs.countrycodes.iso_handler import convert_alpha_2_to_alpha_3
+from libs.countrycodes.iso_handler import convert_alpha_2_to_qualified_name
 
 from .gl_structure import BAR_WEBSITE_TYPES_SCHEMA
 from .gl_structure import CVE_HEATMAP
