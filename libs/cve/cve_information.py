@@ -27,19 +27,20 @@ def get_cve_information(cves, servicename):
             response = requests.get(CVE_URL.format(entry))
             cvescore, access_com, access_vec, summary, exploitdb_link = None, None, None, None, None
             if response.status_code == 200:
-                reponse_as_json = json.loads(response.text)
-                keys = reponse_as_json.keys()
-                if 'cvss' in keys:
-                    cvescore = reponse_as_json['cvss']
-                if 'access' in keys:
-                    if 'complexity' in reponse_as_json['access'].keys():
-                        access_com = reponse_as_json['access']['complexity']
-                    if 'vector' in reponse_as_json['access'].keys():
-                        access_vec = reponse_as_json['access']['vector']
-                if 'summary' in keys:
-                    summary = reponse_as_json['summary']
-                if 'refmap' in keys and 'exploit-db' in reponse_as_json['refmap'].keys():
-                    exploitdb_link = EXPLOITDBLINK.format(reponse_as_json['refmap']['exploit-db'][0])
+                response_as_json = json.loads(response.text)
+                if response_as_json is not None:
+                    keys = response_as_json.keys()
+                    if 'cvss' in keys:
+                        cvescore = response_as_json['cvss']
+                    if 'access' in keys:
+                        if 'complexity' in response_as_json['access'].keys():
+                            access_com = response_as_json['access']['complexity']
+                        if 'vector' in response_as_json['access'].keys():
+                            access_vec = response_as_json['access']['vector']
+                    if 'summary' in keys:
+                        summary = response_as_json['summary']
+                    if 'refmap' in keys and 'exploit-db' in response_as_json['refmap'].keys():
+                        exploitdb_link = EXPLOITDBLINK.format(response_as_json['refmap']['exploit-db'][0])
             information[entry] = {
                 "CVS-Score": cvescore,
                 "Complexity": access_com,
