@@ -268,8 +268,12 @@ class Pusher(Server):
             IoC-[CurrentDate]-Branch.
         @param findings will be all findings in json/dict formtat.
         '''
-        findings = json.loads(findings.value.decode("utf-8"))
-        report_name = findings['input_filename'] if 'input_filename' in findings.keys() else random.randint(4, 10000)
+        try:
+            findings = json.loads(findings.value.decode("utf-8"))
+            report_name = findings['input_filename'] if 'input_filename' in findings.keys() else random.randint(4, 10000)
+        except Exception as ex:
+            LogMessage("Handling report {} failed with {}".format(findings.value.decode("utf-8"), str(ex)), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            return
         try:
             Pusher.GPROJECT.branches.create({'branch': report_name, 'ref': get_branch_name()})
             data = Pusher.create_markdown(findings, report_name)
@@ -283,12 +287,13 @@ class Pusher(Server):
         except gitlab.gitlab.GitlabCreateError as gc_error:
             LogMessage(f"{report_name}: {str(gc_error)}", LogMessage.LogTyp.ERROR, SERVICENAME).log() 
             #GitLab is in her. SWITCH between 400 and 500 and 502
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError as error:
             Pusher.BACKOFF_TIMER += 120
             Pusher.TIME_SINCE_EXCEPTION = datetime.datetime.now()
             Pusher.GPROJECT = Pusher.get_repository_handle()
             time.sleep(Pusher.BACKOFF_TIMER)
             Pusher.submit_report(findings)
+            LogMessage(f"{report_name}: {str(error)}", LogMessage.LogTyp.ERROR, SERVICENAME).log()
         except Exception as error:
             Pusher.BACKOFF_TIMER += 15
             Pusher.TIME_SINCE_EXCEPTION = datetime.datetime.now()
