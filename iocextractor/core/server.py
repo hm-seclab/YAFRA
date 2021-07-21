@@ -45,6 +45,7 @@ from libs.kafka.logging import send_health_message
 from libs.extensions.loader import load_extensions
 from libs.gitlabl.files import read_file_from_gitlab
 from libs.gitlabl.sanitize_title import sanitize_title
+import traceback
 # ENVIRONMENT-VARS
 SERVICENAME = envvar("SERVICENAME", "Extractor")
 IOC_TOPIC_NAME = envvar("IOC_TOPIC", "ioc")
@@ -181,7 +182,7 @@ class Extractor(Server):
             iocs = merge_dicts(iocs, filter_dict_values(ex_ioc, SERVICENAME), SERVICENAME)
             iocs = filter_by_blacklist(iocs, Extractor.BLACKLIST, SERVICENAME)
         except Exception as error:
-            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            LogMessage(f"{str(error)} {''.join(traceback.format_tb(error.__traceback__))}", LogMessage.LogTyp.ERROR, SERVICENAME).log()
         return iocs
 
     @staticmethod
