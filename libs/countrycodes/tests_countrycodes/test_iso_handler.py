@@ -8,7 +8,7 @@ from libs.countrycodes.iso_handler import convert_alpha_2_to_alpha_3, convert_al
 from libs.kafka.logging import LogMessage
 
 
-class FilterTests(TestCase):
+class IsoHandlerTests(TestCase):
     '''
     Tests for iso_handler.
     '''
