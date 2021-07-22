@@ -1,32 +1,21 @@
 '''
 Tests for cve_information.py
 '''
+import os
 import json
-from unittest import TestCase, mock
+from unittest import TestCase
 from unittest.mock import patch, Mock
-
-import requests
 
 from libs.cve.cve_information import get_cve_information
 from libs.kafka.logging import LogMessage
 
 
-# # This method will be used by the mock to replace requests.get
-# def mocked_requests_get(*args, **kwargs):
-#     class MockResponse:
-#         def __init__(self, json_data, status_code):
-#             self.json_data = json_data
-#             self.status_code = status_code
-#
-#         def json(self):
-#             return self.json_data
-#
-#     if args[0] == 'https://cve.circl.lu/api/cve/INVALID_CVE':
-#         return {"key1asfasf": "value1asfads"}
-#     elif args[0] == 'https://cve.circl.lu/api/cve/{}':
-#         return MockResponse({"key2": "value2"}, 200)
-#
-#     return MockResponse(None, 404)
+def get_path(relpath):
+    abspath = os.path.abspath(__file__)
+    dirname = os.path.dirname(abspath)
+    filepath = os.path.join(dirname, relpath)
+    return filepath
+
 
 class CveInformationTests(TestCase):
     '''
@@ -260,7 +249,9 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        with open("../resources/cve_response_missing_cvss.json") as test_json_file:
+        path = get_path('resources/cve_response_missing_cvss.json')
+
+        with open(str(path)) as test_json_file:
             test_text = json.load(test_json_file)
             test_text = json.dumps(test_text)
             test_list = ["CVE-2020-0601"]
@@ -294,7 +285,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        with open("../../../resources/cve_response_missing_access.json") as test_json_file:
+        with open("./libs/cve/tests_cve/resources/cve_response_missing_access.json") as test_json_file:
             test_text = json.load(test_json_file)
             test_text = json.dumps(test_text)
             test_list = ["CVE-2020-0601"]
@@ -327,7 +318,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        with open("../../../resources/cve_response_missing_complexity.json") as test_json_file:
+        with open("./libs/cve/tests_cve/resources/cve_response_missing_complexity.json") as test_json_file:
             test_text = json.load(test_json_file)
             test_text = json.dumps(test_text)
             test_list = ["CVE-2020-0601"]
@@ -360,7 +351,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        with open("../../../resources/cve_response_missing_vector.json") as test_json_file:
+        with open("./libs/cve/tests_cve/resources/cve_response_missing_vector.json") as test_json_file:
             test_text = json.load(test_json_file)
             test_text = json.dumps(test_text)
             test_list = ["CVE-2020-0601"]
@@ -393,7 +384,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        with open("../../../resources/cve_response_missing_summary.json") as test_json_file:
+        with open("./libs/cve/tests_cve/resources/cve_response_missing_summary.json") as test_json_file:
             test_text = json.load(test_json_file)
             test_text = json.dumps(test_text)
             test_list = ["CVE-2020-0601"]
@@ -426,7 +417,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        with open("/resources/cve_response_missing_refmap.json") as test_json_file:
+        with open("./libs/cve/tests_cve/resources/cve_response_missing_refmap.json") as test_json_file:
             test_text = json.load(test_json_file)
             test_text = json.dumps(test_text)
             test_list = ["CVE-2020-0601"]
@@ -459,7 +450,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        with open("../../resources/cve_response_missing_exploit_db.json") as test_json_file:
+        with open("./libs/cve/tests_cve/resources/cve_response_missing_exploit_db.json") as test_json_file:
             test_text = json.load(test_json_file)
             test_text = json.dumps(test_text)
             test_list = ["CVE-2020-0601"]
@@ -492,7 +483,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        with open("../../resources/cve_response_valid.json") as test_json_file:
+        with open("./libs/cve/tests_cve/resources/cve_response_valid.json") as test_json_file:
             test_text = json.load(test_json_file)
             test_text = json.dumps(test_text)
             test_list = ["CVE-2020-0601"]
