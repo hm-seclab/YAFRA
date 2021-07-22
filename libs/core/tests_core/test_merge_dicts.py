@@ -8,7 +8,7 @@ from libs.core.merge_dicts import merge_dicts
 from libs.kafka.logging import LogMessage
 
 
-class FilterTests(TestCase):
+class MergeDictsTests(TestCase):
     '''
     Tests for merge_dicts.
     '''

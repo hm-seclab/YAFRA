@@ -24,9 +24,22 @@ def get_cve_information(cves, servicename):
     information = {}
     try:
         for entry in cves:
+            if type(entry) is not str:
+                continue
+
             response = requests.get(CVE_URL.format(entry))
             cvescore, access_com, access_vec, summary, exploitdb_link = None, None, None, None, None
+
+            if response is None:
+                continue
+
+            if response.status_code is None:
+                continue
+
             if response.status_code == 200:
+                if response.text is None:
+                    continue
+
                 response_as_json = json.loads(response.text)
                 if response_as_json is not None:
                     keys = response_as_json.keys()
