@@ -274,12 +274,7 @@ class Pusher(Server):
             Pusher.GPROJECT.branches.create({'branch': report_name, 'ref': get_branch_name()})
             data = Pusher.create_markdown(findings, report_name)
             _ = Pusher.GPROJECT.commits.create(data)
-            create_issues(  gitlabserver=GITLAB_SERVER,
-                            token=GITLAB_TOKEN,
-                            repository=GITLAB_REPO_NAME,
-                            servicename=SERVICENAME,
-                            title=report_name,
-                            description="A report has been submitted. The name of the branch is: {}.".format(report_name))
+            create_issues(Pusher.GPROJECT, servicename=SERVICENAME, title=report_name, description="A report has been submitted. The name of the branch is: {}.".format(report_name))
         except gitlab.gitlab.GitlabCreateError as gc_error:
             LogMessage(str(gc_error), LogMessage.LogTyp.ERROR, SERVICENAME).log() 
             #GitLab is in her. SWITCH between 400 and 500 and 502
