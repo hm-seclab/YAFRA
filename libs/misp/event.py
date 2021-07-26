@@ -35,7 +35,7 @@ MISP_MAP = {
 
 EXTENSIONS = load_extensions("Library")
 
-MISP_MAP = append_extensions_misp_types(MISP_MAP, EXTENSIONS)
+MISP_MAP = append_extensions_misp_types(MISP_MAP, EXTENSIONS, "Library")
 
 def get_misp_type(keyname):
     '''

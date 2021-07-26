@@ -2,11 +2,12 @@
 Tests for loader.py
 '''
 import os
-import json
+import re
 from unittest import TestCase
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
-from libs.extensions.loader import Extension, generate_dict_with_jsonfield_and_reportfield, load_extensions
+from libs.extensions.loader import Extension, generate_dict_with_jsonfield_and_reportfield, load_extensions, \
+    append_extensions_misp_types
 from libs.kafka.logging import LogMessage
 
 
@@ -27,16 +28,6 @@ class ExtensionsLoaderTests(TestCase):
     '''
     Tests for the extensions class.
     '''
-
-    def setUp(self) -> None:
-        self.test_extension = Extension("TEST_NAME", "TEST_FIELD", "TEST_PATTERN", "TEST_REPORTFIELD", "TEST_MISPTYPE", 0, 0, False)
-
-    # def test_generate_dict_with_jsonfield_and_reportfield(self):
-    #
-    #     test_list = [self.test_extension]
-    #
-    #     output = generate_dict_with_jsonfield_and_reportfield(test_list, "TEST_SERVICENAME")
-    #     print(output)
 
     def test_generate_dict_with_jsonfield_and_reportfield_returns_empty_dict_when_given_empty_list_as_parameter(self):
         '''
@@ -160,473 +151,496 @@ class ExtensionsLoaderTests(TestCase):
         self.assertIsNotNone(output["TEST_FIELD"])
         self.assertEqual(output["TEST_FIELD"], "TEST_REPORTFIELD")
 
-    def test_ResolutionSLA_Full(self):
-        with patch('os.listdir') as mock_listdir:
-            mock_listdir.return_value = ['imphash_marked.yafex', 'dogecoin.yafex', 'apt.yafex', 'httprequests.yafex', 'cwe.yafex', 'cisaalerts.yafex', 'base64.yafex', 'ethereum.yafex', 'githubrepository.yafex', 'msbulltin.yafex', 'port_protocol.yafex', 'ports.yafex', 'size_bytes.yafex', 'analysisreport.yafex', 'mitresoftware.yafex', 'regkeys.yafex', 'mime-type.yafex', 'dash.yafex', 'cisabulltin.yafex', 'filenames.yafex', 'githubuser.yafex', 'windows_file_paths.yafex', 'mar-id.yafex', 'onion.yafex', 'ipport.yafex']
-            # mock_abspath.return_value = '../../extensions'
+    def test_load_extensions_returns_empty_list_when_status_is_missing(self):
+        '''
+        Test to check if the function returns
+        an empty list, when the status inside
+        the yafex file is missing.
+        '''
+        test_yafex_file_path = get_path('resources/test_extension_status_missing.yafex')
 
-            with patch.object(LogMessage, "log", return_value="ERROR"):
-                self.assertRaises(Exception, load_extensions("TEST_SERVICENAME"))
+        with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
+            mock_listdir.return_value = ['test_extension_status_missing.yafex']
+            mock_abspath.return_value = str(test_yafex_file_path)
 
-    def test_load_extensions(self):
+            output = load_extensions("TEST_SERVICENAME")
+
+            self.assertIsNotNone(output)
+            self.assertIsInstance(output, list)
+            self.assertTrue(len(output) == 0)
+
+    def test_load_extensions_returns_empty_list_when_status_is_None(self):
+        '''
+        Test to check if the function returns
+        an empty list, when the status inside
+        the yafex file is None.
+        '''
+        test_yafex_file_path = get_path('resources/test_extension_status_None.yafex')
+
+        with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
+            mock_listdir.return_value = ['test_extension_status_None.yafex']
+            mock_abspath.return_value = str(test_yafex_file_path)
+
+            output = load_extensions("TEST_SERVICENAME")
+
+            self.assertIsNotNone(output)
+            self.assertIsInstance(output, list)
+            self.assertTrue(len(output) == 0)
+
+
+    def test_load_extensions_returns_empty_list_when_status_is_disabled_in_yafex(self):
+        '''
+        Test to check if the function returns
+        an empty list, when the status inside
+        the yafex file is disabled.
+        '''
+        test_yafex_file_path = get_path('resources/test_extension_status_disabled.yafex')
+
+        with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
+            mock_listdir.return_value = ['test_extension_status_disabled.yafex']
+            mock_abspath.return_value = str(test_yafex_file_path)
+
+            output = load_extensions("TEST_SERVICENAME")
+
+            self.assertIsNotNone(output)
+            self.assertIsInstance(output, list)
+            self.assertTrue(len(output) == 0)
+
+    def test_load_extensions_returns_empty_list_when_yafex_is_empty(self):
+        '''
+        Test to check if the function returns
+        an empty list, when the yafex file
+        is empty.
+        '''
+        test_yafex_file_path = get_path('resources/test_extension_empty.yafex')
+
+        with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
+            mock_listdir.return_value = ['test_extension_empty.yafex']
+            mock_abspath.return_value = str(test_yafex_file_path)
+
+            output = load_extensions("TEST_SERVICENAME")
+
+            self.assertIsNotNone(output)
+            self.assertIsInstance(output, list)
+            self.assertTrue(len(output) == 0)
+
+    def test_load_extensions_returns_empty_list_when_name_in_yafex_is_empty(self):
+        '''
+        Test to check if the function returns
+        an empty list, when the name in the
+        yafex file is empty.
+        '''
+        test_yafex_file_path = get_path('resources/test_extension_empty_name.yafex')
+
+        with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
+            mock_listdir.return_value = ['test_extension_empty_name.yafex']
+            mock_abspath.return_value = str(test_yafex_file_path)
+
+            output = load_extensions("TEST_SERVICENAME")
+
+            self.assertIsNotNone(output)
+            self.assertIsInstance(output, list)
+            self.assertTrue(len(output) == 0)
+
+    def test_load_extensions_returns_valid_extension_with_group_0_when_no_group_given(self):
+        '''
+        Test to check if the function returns
+        a valid extension object, with 0 as
+        the group value, when no group is
+        given inside the yafex file.
+        '''
+        test_yafex_file_path = get_path('resources/test_extension_no_group.yafex')
+
+        with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
+            mock_listdir.return_value = ['test_extension_no_group.yafex']
+            mock_abspath.return_value = str(test_yafex_file_path)
+
+            output = load_extensions("TEST_SERVICENAME")
+
+            test_extension_object = output[0]
+            test_name = test_extension_object.name
+            test_field = test_extension_object.field
+            test_report_field = test_extension_object.reportfield
+            test_misp_type = test_extension_object.misptype
+            test_pattern_args = test_extension_object.pattern_args
+            test_group = test_extension_object.get_group()
+            test_pattern = test_extension_object.get_pattern()
+            test_hidden = test_extension_object.hidden
+
+            self.assertIsNotNone(output)
+            self.assertIsInstance(output, list)
+            self.assertTrue(len(output) == 1)
+            self.assertTrue(type(test_extension_object), 'Extension')
+            self.assertIsNotNone(test_name)
+            self.assertIsNotNone(test_field)
+            self.assertIsNotNone(test_report_field)
+            self.assertIsNotNone(test_misp_type)
+            self.assertIsNotNone(test_pattern_args)
+            self.assertIsNotNone(test_group)
+            self.assertIsNotNone(test_pattern)
+            self.assertIsNotNone(test_hidden)
+            self.assertEqual(test_name, "TEST_NAME")
+            self.assertEqual(test_field, "test_field")
+            self.assertEqual(test_report_field, "Test Report Field")
+            self.assertEqual(test_misp_type, "test_misp_type")
+            self.assertEqual(test_pattern_args, 0)
+            self.assertEqual(test_group, 0)
+            self.assertEqual(test_pattern, re.compile('(AR[0-9]{2}-[0-9a-zA-Z]{4,5})'))
+            self.assertEqual(test_hidden, True)
+
+    def test_load_extensions_returns_valid_extension_with_group_0_when_no_group_is_not_int(self):
+        '''
+        Test to check if the function returns
+        a valid extension object, with 0 as
+        the group value, when the group type
+        is not int.
+        '''
+        test_yafex_file_path = get_path('resources/test_extension_group_string.yafex')
+
+        with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
+            mock_listdir.return_value = ['test_extension_group_string.yafex']
+            mock_abspath.return_value = str(test_yafex_file_path)
+
+            output = load_extensions("TEST_SERVICENAME")
+
+            test_extension_object = output[0]
+            test_name = test_extension_object.name
+            test_field = test_extension_object.field
+            test_report_field = test_extension_object.reportfield
+            test_misp_type = test_extension_object.misptype
+            test_pattern_args = test_extension_object.pattern_args
+            test_group = test_extension_object.get_group()
+            test_pattern = test_extension_object.get_pattern()
+            test_hidden = test_extension_object.hidden
+
+            self.assertIsNotNone(output)
+            self.assertIsInstance(output, list)
+            self.assertTrue(len(output) == 1)
+            self.assertTrue(type(test_extension_object), 'Extension')
+            self.assertIsNotNone(test_name)
+            self.assertIsNotNone(test_field)
+            self.assertIsNotNone(test_report_field)
+            self.assertIsNotNone(test_misp_type)
+            self.assertIsNotNone(test_pattern_args)
+            self.assertIsNotNone(test_group)
+            self.assertIsNotNone(test_pattern)
+            self.assertIsNotNone(test_hidden)
+            self.assertEqual(test_name, "TEST_NAME")
+            self.assertEqual(test_field, "test_field")
+            self.assertEqual(test_report_field, "Test Report Field")
+            self.assertEqual(test_misp_type, "test_misp_type")
+            self.assertEqual(test_pattern_args, 0)
+            self.assertEqual(test_group, 0)
+            self.assertEqual(test_pattern, re.compile('(AR[0-9]{2}-[0-9a-zA-Z]{4,5})'))
+            self.assertEqual(test_hidden, True)
+
+    def test_load_extensions_returns_valid_extension_with_hidden_False_when_no_hidden_given(self):
+        '''
+        Test to check if the function returns
+        a valid extension object, with False
+        as the hidden value, when no hidden
+        is given inside the yafex file.
+        '''
+        test_yafex_file_path = get_path('resources/test_extension_no_hidden.yafex')
+
+        with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
+            mock_listdir.return_value = ['test_extension_no_hidden.yafex']
+            mock_abspath.return_value = str(test_yafex_file_path)
+
+            output = load_extensions("TEST_SERVICENAME")
+
+            test_extension_object = output[0]
+            test_name = test_extension_object.name
+            test_field = test_extension_object.field
+            test_report_field = test_extension_object.reportfield
+            test_misp_type = test_extension_object.misptype
+            test_pattern_args = test_extension_object.pattern_args
+            test_group = test_extension_object.get_group()
+            test_pattern = test_extension_object.get_pattern()
+            test_hidden = test_extension_object.hidden
+
+            self.assertIsNotNone(output)
+            self.assertIsInstance(output, list)
+            self.assertTrue(len(output) == 1)
+            self.assertTrue(type(test_extension_object), 'Extension')
+            self.assertIsNotNone(test_name)
+            self.assertIsNotNone(test_field)
+            self.assertIsNotNone(test_report_field)
+            self.assertIsNotNone(test_misp_type)
+            self.assertIsNotNone(test_pattern_args)
+            self.assertIsNotNone(test_group)
+            self.assertIsNotNone(test_pattern)
+            self.assertIsNotNone(test_hidden)
+            self.assertEqual(test_name, "TEST_NAME")
+            self.assertEqual(test_field, "test_field")
+            self.assertEqual(test_report_field, "Test Report Field")
+            self.assertEqual(test_misp_type, "test_misp_type")
+            self.assertEqual(test_pattern_args, 0)
+            self.assertEqual(test_group, 0)
+            self.assertEqual(test_pattern, re.compile('(AR[0-9]{2}-[0-9a-zA-Z]{4,5})'))
+            self.assertEqual(test_hidden, False)
+
+    def test_load_extensions_returns_valid_extension_with_hidden_False_when_hidden_is_not_bool(self):
+        '''
+        Test to check if the function returns
+        a valid extension object, with False as
+        the hidden value, when the hidden type
+        is not bool.
+        '''
+        test_yafex_file_path = get_path('resources/test_extension_hidden_string.yafex')
+
+        with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
+            mock_listdir.return_value = ['test_extension_hidden_string.yafex']
+            mock_abspath.return_value = str(test_yafex_file_path)
+
+            output = load_extensions("TEST_SERVICENAME")
+
+            test_extension_object = output[0]
+            test_name = test_extension_object.name
+            test_field = test_extension_object.field
+            test_report_field = test_extension_object.reportfield
+            test_misp_type = test_extension_object.misptype
+            test_pattern_args = test_extension_object.pattern_args
+            test_group = test_extension_object.get_group()
+            test_pattern = test_extension_object.get_pattern()
+            test_hidden = test_extension_object.hidden
+
+            self.assertIsNotNone(output)
+            self.assertIsInstance(output, list)
+            self.assertTrue(len(output) == 1)
+            self.assertTrue(type(test_extension_object), 'Extension')
+            self.assertIsNotNone(test_name)
+            self.assertIsNotNone(test_field)
+            self.assertIsNotNone(test_report_field)
+            self.assertIsNotNone(test_misp_type)
+            self.assertIsNotNone(test_pattern_args)
+            self.assertIsNotNone(test_group)
+            self.assertIsNotNone(test_pattern)
+            self.assertIsNotNone(test_hidden)
+            self.assertEqual(test_name, "TEST_NAME")
+            self.assertEqual(test_field, "test_field")
+            self.assertEqual(test_report_field, "Test Report Field")
+            self.assertEqual(test_misp_type, "test_misp_type")
+            self.assertEqual(test_pattern_args, 0)
+            self.assertEqual(test_group, 0)
+            self.assertEqual(test_pattern, re.compile('(AR[0-9]{2}-[0-9a-zA-Z]{4,5})'))
+            self.assertEqual(test_hidden, False)
+
+    def test_load_extensions_returns_valid_extension_when_all_fields_are_set(self):
+        '''
+        Test to check if the function returns
+        a valid extension object, when all
+        fields are set properly.
+        '''
+        test_yafex_file_path = get_path('resources/test_extension_valid.yafex')
+
+        with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
+            mock_listdir.return_value = ['test_extension_valid.yafex']
+            mock_abspath.return_value = str(test_yafex_file_path)
+
+            output = load_extensions("TEST_SERVICENAME")
+
+            test_extension_object = output[0]
+            test_name = test_extension_object.name
+            test_field = test_extension_object.field
+            test_report_field = test_extension_object.reportfield
+            test_misp_type = test_extension_object.misptype
+            test_pattern_args = test_extension_object.pattern_args
+            test_group = test_extension_object.get_group()
+            test_pattern = test_extension_object.get_pattern()
+            test_hidden = test_extension_object.hidden
+
+            self.assertIsNotNone(output)
+            self.assertIsInstance(output, list)
+            self.assertTrue(len(output) == 1)
+            self.assertTrue(type(test_extension_object), 'Extension')
+            self.assertIsNotNone(test_name)
+            self.assertIsNotNone(test_field)
+            self.assertIsNotNone(test_report_field)
+            self.assertIsNotNone(test_misp_type)
+            self.assertIsNotNone(test_pattern_args)
+            self.assertIsNotNone(test_group)
+            self.assertIsNotNone(test_pattern)
+            self.assertIsNotNone(test_hidden)
+            self.assertEqual(test_name, "TEST_NAME")
+            self.assertEqual(test_field, "test_field")
+            self.assertEqual(test_report_field, "Test Report Field")
+            self.assertEqual(test_misp_type, "test_misp_type")
+            self.assertEqual(test_pattern_args, 0)
+            self.assertEqual(test_group, 0)
+            self.assertEqual(test_pattern, re.compile('(AR[0-9]{2}-[0-9a-zA-Z]{4,5})'))
+            self.assertEqual(test_hidden, True)
+
+    def test_append_extensions_misp_types_returns_empty_dict_when_given_empty_dict_and_empty_list_as_parameter(self):
+        '''
+        Test to check if the function returns an empty dict
+        when an empty dict and an empty list have been given
+        as a parameter.
+        '''
+        test_dict = {}
+        test_list = []
+
+        output = append_extensions_misp_types(test_dict, test_list, "TEST_SERVICENAME")
+
+        self.assertIsNotNone(output)
+        self.assertIsInstance(output, dict)
+        self.assertTrue(len(output) == 0)
+
+    def test_append_extensions_misp_types_returns_valid_dict_when_given_empty_dict_as_parameter(self):
         '''
         Test to check if the function returns a valid dict
-        when a valid extension with valid json field and
-        valid report field has been given as a paramter.
+        when an empty dict has been given as a parameter.
         '''
+        test_dict = {}
+        test_extension = Extension("TEST_NAME", "TEST_FIELD", "TEST_PATTERN", "TEST_REPORTFIELD", "TEST_MISPTYPE", 0, 0, False)
+        test_list = [test_extension]
 
-
-        mock_abspath_patcher = patch('os.listdir')
-        mock_abspath_patcher = patch('os.path.abspath')
-
-        test_list = ["INVALID_CVEEE"]
-
-        mock_list_dir = mock_abspath_patcher.start()
-
-        mock_list_dir.return_value = ['imphash_marked.yafex', 'dogecoin.yafex', 'apt.yafex', 'httprequests.yafex', 'cwe.yafex', 'cisaalerts.yafex', 'base64.yafex', 'ethereum.yafex', 'githubrepository.yafex', 'msbulltin.yafex', 'port_protocol.yafex', 'ports.yafex', 'size_bytes.yafex', 'analysisreport.yafex', 'mitresoftware.yafex', 'regkeys.yafex', 'mime-type.yafex', 'dash.yafex', 'cisabulltin.yafex', 'filenames.yafex', 'githubuser.yafex', 'windows_file_paths.yafex', 'mar-id.yafex', 'onion.yafex', 'ipport.yafex']
-
-        output = load_extensions("TEST_SERVICENAME")
-
-        mock_abspath_patcher.stop()
-
-    def test_get_cve_information_returns_empty_dict_when_None_as_the_response(self):
-        '''
-        Test to check if the function returns an
-        empty dict when the response is None.
-        '''
-
-        mock_get_patcher = patch('requests.get')
-
-        test_list = ["INVALID_CVEEE"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = None
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
-
-        self.assertIsNotNone(output)
-        self.assertIsInstance(output, dict)
-        self.assertTrue(len(output) == 0)
-
-    def test_get_cve_information_returns_empty_dict_when_None_as_the_response_status_code(self):
-        '''
-        Test to check if the function returns an
-        empty dict when the response status code is None.
-        '''
-
-        mock_get_patcher = patch('requests.get')
-
-        test_text = "null"
-        test_list = ["INVALID_CVEEE"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = Mock(status_code=None, text=test_text)
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
-
-        self.assertIsNotNone(output)
-        self.assertIsInstance(output, dict)
-        self.assertTrue(len(output) == 0)
-
-
-    def test_get_cve_information_returns_empty_dict_when_None_as_the_response_text(self):
-        '''
-        Test to check if the function returns an
-        empty dict when the response text is None.
-        '''
-
-        mock_get_patcher = patch('requests.get')
-
-        test_list = ["INVALID_CVEEE"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = Mock(status_code=200, text=None)
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
-
-        self.assertIsNotNone(output)
-        self.assertIsInstance(output, dict)
-        self.assertTrue(len(output) == 0)
-
-    def test_get_cve_information_returns_None_as_dict_values_when_getting_400_response(self):
-        '''
-        Test to check if the function returns None
-        as the return dict values when the response
-        has a 400 as the status code.
-        '''
-
-        mock_get_patcher = patch('requests.get')
-
-        test_text = "null"
-        test_list = ["INVALID_CVEEE"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = Mock(status_code=400, text=test_text)
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
+        output = append_extensions_misp_types(test_dict, test_list, "TEST_SERVICENAME")
 
         self.assertIsNotNone(output)
         self.assertIsInstance(output, dict)
         self.assertTrue(len(output) == 1)
-        self.assertIsInstance(output["INVALID_CVEEE"], dict)
-        self.assertTrue(len(output["INVALID_CVEEE"]) == 5)
-        self.assertIsNone(output["INVALID_CVEEE"]["CVS-Score"])
-        self.assertIsNone(output["INVALID_CVEEE"]["Complexity"])
-        self.assertIsNone(output["INVALID_CVEEE"]["Vektor"])
-        self.assertIsNone(output["INVALID_CVEEE"]["Summary"])
-        self.assertIsNone(output["INVALID_CVEEE"]["Exploit-DB"])
+        self.assertIsInstance(output["TEST_REPORTFIELD"], str)
+        self.assertIsNotNone(output["TEST_REPORTFIELD"])
+        self.assertEqual(output["TEST_REPORTFIELD"], "TEST_MISPTYPE")
 
-    def test_get_cve_information_returns_None_as_dict_values_when_getting_500_response(self):
+    def test_append_extensions_misp_types_returns_valid_dict_when_given_empty_list_as_parameter(self):
         '''
-        Test to check if the function returns None
-        as the return dict values when the response
-        has a 500 as the status code.
+        Test to check if the function returns a valid dict
+        when an empty list has been given as a parameter.
         '''
+        test_dict = {
+            "TEST_KEY": "TEST_VALUE",
+        }
+        test_list = []
 
-        mock_get_patcher = patch('requests.get')
-
-        test_text = "null"
-        test_list = ["INVALID_CVEEE"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = Mock(status_code=500, text=test_text)
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
+        output = append_extensions_misp_types(test_dict, test_list, "TEST_SERVICENAME")
 
         self.assertIsNotNone(output)
         self.assertIsInstance(output, dict)
         self.assertTrue(len(output) == 1)
-        self.assertIsInstance(output["INVALID_CVEEE"], dict)
-        self.assertTrue(len(output["INVALID_CVEEE"]) == 5)
-        self.assertIsNone(output["INVALID_CVEEE"]["CVS-Score"])
-        self.assertIsNone(output["INVALID_CVEEE"]["Complexity"])
-        self.assertIsNone(output["INVALID_CVEEE"]["Vektor"])
-        self.assertIsNone(output["INVALID_CVEEE"]["Summary"])
-        self.assertIsNone(output["INVALID_CVEEE"]["Exploit-DB"])
+        self.assertIsInstance(output["TEST_KEY"], str)
+        self.assertIsNotNone(output["TEST_KEY"])
+        self.assertEqual(output["TEST_KEY"], "TEST_VALUE")
 
-    def test_get_cve_information_returns_None_as_dict_values_when_given_invalid_cve_as_parameter(self):
+    def test_append_extensions_misp_types_throws_exception_when_None_as_dict_parameter(self):
         '''
-        Test to check if the function returns None
-        as the return dict values when an invalid
-        cve has not been given as a parameter.
+        Test to check if the function throws an exception
+        when None has been given as a dict parameter.
+        '''
+        test_extension = Extension("TEST_NAME", "TEST_FIELD", "TEST_PATTERN", "TEST_REPORTFIELD", "TEST_MISPTYPE", 0, 0, False)
+        test_list = [test_extension]
+
+        with patch.object(LogMessage, "log", return_value="ERROR"):
+            self.assertRaises(Exception, append_extensions_misp_types(None, test_list, "TEST_SERVICENAME"))
+
+    def test_append_extensions_misp_types_throws_exception_when_None_as_list_parameter(self):
+        '''
+        Test to check if the function throws an exception
+        when None hass been given as a list parameter.
+        '''
+        test_dict = {
+            "TEST_KEY": "TEST_VALUE",
+        }
+
+        with patch.object(LogMessage, "log", return_value="ERROR"):
+            self.assertRaises(Exception, append_extensions_misp_types(test_dict, None, "TEST_SERVICENAME"))
+
+    def test_append_extensions_misp_types_throws_exception_when_None_as_dict_and_list_parameter(self):
+        '''
+        Test to check if the function throws an exception
+        when None hass been given as a dict and as a
+        list parameter.
         '''
 
-        mock_get_patcher = patch('requests.get')
+        with patch.object(LogMessage, "log", return_value="ERROR"):
+            self.assertRaises(Exception, append_extensions_misp_types(None, None, "TEST_SERVICENAME"))
 
-        test_text = "null"
-        test_list = ["INVALID_CVEEE"]
+    def test_append_extensions_misp_types_creates_new_key_value_pair_when_not_already_in_dict(self):
+        '''
+        Test to check if the function creates a new
+        key value pair inside a dict, when the
+        key value pair is not already in the given dict.
+        '''
+        test_dict = {
+            "TEST_KEY": "TEST_VALUE",
+        }
+        test_extension = Extension("TEST_NAME", "TEST_FIELD", "TEST_PATTERN", "TEST_REPORTFIELD", "TEST_MISPTYPE", 0, 0, False)
+        test_list = [test_extension]
 
-        mock_get = mock_get_patcher.start()
+        output = append_extensions_misp_types(test_dict, test_list, "TEST_SERVICENAME")
 
-        mock_get.return_value = Mock(status_code=200, text=test_text)
+        self.assertIsNotNone(output)
+        self.assertIsInstance(output, dict)
+        self.assertTrue(len(output) == 2)
+        self.assertIsInstance(output["TEST_KEY"], str)
+        self.assertIsNotNone(output["TEST_KEY"])
+        self.assertEqual(output["TEST_KEY"], "TEST_VALUE")
+        self.assertIsInstance(output["TEST_REPORTFIELD"], str)
+        self.assertIsNotNone(output["TEST_REPORTFIELD"])
+        self.assertEqual(output["TEST_REPORTFIELD"], "TEST_MISPTYPE")
 
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
+    def test_append_extensions_misp_types_creates_no_new_key_value_pair_when_already_in_dict(self):
+        '''
+        Test to check if the function does not
+        create a new key value pair inside a dict,
+        when the key value pair is already in the given dict.
+        '''
+        test_dict = {
+            "TEST_KEY": "TEST_VALUE",
+        }
+        test_extension = Extension("TEST_NAME", "TEST_FIELD", "TEST_PATTERN", "TEST_KEY", "TEST_VALUE", 0, 0, False)
+        test_list = [test_extension]
 
-        mock_get_patcher.stop()
+        output = append_extensions_misp_types(test_dict, test_list, "TEST_SERVICENAME")
 
         self.assertIsNotNone(output)
         self.assertIsInstance(output, dict)
         self.assertTrue(len(output) == 1)
-        self.assertIsInstance(output["INVALID_CVEEE"], dict)
-        self.assertTrue(len(output["INVALID_CVEEE"]) == 5)
-        self.assertIsNone(output["INVALID_CVEEE"]["CVS-Score"])
-        self.assertIsNone(output["INVALID_CVEEE"]["Complexity"])
-        self.assertIsNone(output["INVALID_CVEEE"]["Vektor"])
-        self.assertIsNone(output["INVALID_CVEEE"]["Summary"])
-        self.assertIsNone(output["INVALID_CVEEE"]["Exploit-DB"])
+        self.assertIsInstance(output["TEST_KEY"], str)
+        self.assertIsNotNone(output["TEST_KEY"])
+        self.assertEqual(output["TEST_KEY"], "TEST_VALUE")
 
-    def test_get_cve_information_returns_None_as_cvescore_when_cvss_key_missing(self):
+    def test_append_extensions_misp_types_creates_no_new_value_for_existing_key(self):
         '''
-        Test to check if the function returns None
-        as the cvescore value when the cvss key is
-        missing in the response.
+        Test to check if the function does not
+        create a new value for an already existing key.
         '''
+        test_dict = {
+            "TEST_KEY": "TEST_VALUE",
+        }
+        test_extension = Extension("TEST_NAME", "TEST_FIELD", "TEST_PATTERN", "TEST_KEY", "TEST_VALUE_NEW", 0, 0, False)
+        test_list = [test_extension]
 
-        mock_get_patcher = patch('requests.get')
-
-        path = get_path('resources/cve_response_missing_cvss.json')
-
-        with open(str(path)) as test_json_file:
-            test_text = json.load(test_json_file)
-            test_text = json.dumps(test_text)
-            test_list = ["CVE-2020-0601"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = Mock(status_code=200, text=test_text)
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
+        output = append_extensions_misp_types(test_dict, test_list, "TEST_SERVICENAME")
 
         self.assertIsNotNone(output)
         self.assertIsInstance(output, dict)
         self.assertTrue(len(output) == 1)
-        self.assertIsInstance(output["CVE-2020-0601"], dict)
-        self.assertTrue(len(output["CVE-2020-0601"]) == 5)
-        self.assertIsNone(output["CVE-2020-0601"]["CVS-Score"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Complexity"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Vektor"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Summary"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Exploit-DB"])
+        self.assertIsInstance(output["TEST_KEY"], str)
+        self.assertIsNotNone(output["TEST_KEY"])
+        self.assertEqual(output["TEST_KEY"], "TEST_VALUE")
 
-    def test_get_cve_information_returns_None_as_complexity_and_None_as_vector_when_access_key_missing(self):
+    def test_append_extensions_misp_types_creates_new_key_value_pair_for_different_key_but_same_value(self):
         '''
-        Test to check if the function returns None
-        as the complexity value and as the vector
-        value when the access key is missing
-        in the response.
+        Test to check if the function creates
+        a new key value pair for a different key,
+        which has a already existing value.
         '''
+        test_dict = {
+            "TEST_KEY": "TEST_VALUE",
+        }
+        test_extension = Extension("TEST_NAME", "TEST_FIELD", "TEST_PATTERN", "TEST_KEY_NEW", "TEST_VALUE", 0, 0, False)
+        test_list = [test_extension]
 
-        mock_get_patcher = patch('requests.get')
-
-        path = get_path('resources/cve_response_missing_access.json')
-
-        with open(str(path)) as test_json_file:
-            test_text = json.load(test_json_file)
-            test_text = json.dumps(test_text)
-            test_list = ["CVE-2020-0601"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = Mock(status_code=200, text=test_text)
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
+        output = append_extensions_misp_types(test_dict, test_list, "TEST_SERVICENAME")
 
         self.assertIsNotNone(output)
         self.assertIsInstance(output, dict)
-        self.assertTrue(len(output) == 1)
-        self.assertIsInstance(output["CVE-2020-0601"], dict)
-        self.assertTrue(len(output["CVE-2020-0601"]) == 5)
-        self.assertIsNotNone(output["CVE-2020-0601"]["CVS-Score"])
-        self.assertIsNone(output["CVE-2020-0601"]["Complexity"])
-        self.assertIsNone(output["CVE-2020-0601"]["Vektor"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Summary"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Exploit-DB"])
-
-    def test_get_cve_information_returns_None_as_complexity_when_complexity_key_missing(self):
-        '''
-        Test to check if the function returns None
-        as the complexity value when the complexity
-        key is missing in the response.
-        '''
-
-        mock_get_patcher = patch('requests.get')
-
-        path = get_path('resources/cve_response_missing_complexity.json')
-
-        with open(str(path)) as test_json_file:
-            test_text = json.load(test_json_file)
-            test_text = json.dumps(test_text)
-            test_list = ["CVE-2020-0601"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = Mock(status_code=200, text=test_text)
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
-
-        self.assertIsNotNone(output)
-        self.assertIsInstance(output, dict)
-        self.assertTrue(len(output) == 1)
-        self.assertIsInstance(output["CVE-2020-0601"], dict)
-        self.assertTrue(len(output["CVE-2020-0601"]) == 5)
-        self.assertIsNotNone(output["CVE-2020-0601"]["CVS-Score"])
-        self.assertIsNone(output["CVE-2020-0601"]["Complexity"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Vektor"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Summary"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Exploit-DB"])
-
-    def test_get_cve_information_returns_None_as_vector_when_vector_key_missing(self):
-        '''
-        Test to check if the function returns None
-        as the vector value when the vector key is
-        missing in the response.
-        '''
-
-        mock_get_patcher = patch('requests.get')
-
-        path = get_path('resources/cve_response_missing_vector.json')
-
-        with open(str(path)) as test_json_file:
-            test_text = json.load(test_json_file)
-            test_text = json.dumps(test_text)
-            test_list = ["CVE-2020-0601"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = Mock(status_code=200, text=test_text)
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
-
-        self.assertIsNotNone(output)
-        self.assertIsInstance(output, dict)
-        self.assertTrue(len(output) == 1)
-        self.assertIsInstance(output["CVE-2020-0601"], dict)
-        self.assertTrue(len(output["CVE-2020-0601"]) == 5)
-        self.assertIsNotNone(output["CVE-2020-0601"]["CVS-Score"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Complexity"])
-        self.assertIsNone(output["CVE-2020-0601"]["Vektor"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Summary"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Exploit-DB"])
-
-    def test_get_cve_information_returns_None_as_summary_when_summary_key_missing(self):
-        '''
-        Test to check if the function returns None
-        as the summary value when the summary key is
-        missing in the response.
-        '''
-
-        mock_get_patcher = patch('requests.get')
-
-        path = get_path('resources/cve_response_missing_summary.json')
-
-        with open(str(path)) as test_json_file:
-            test_text = json.load(test_json_file)
-            test_text = json.dumps(test_text)
-            test_list = ["CVE-2020-0601"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = Mock(status_code=200, text=test_text)
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
-
-        self.assertIsNotNone(output)
-        self.assertIsInstance(output, dict)
-        self.assertTrue(len(output) == 1)
-        self.assertIsInstance(output["CVE-2020-0601"], dict)
-        self.assertTrue(len(output["CVE-2020-0601"]) == 5)
-        self.assertIsNotNone(output["CVE-2020-0601"]["CVS-Score"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Complexity"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Vektor"])
-        self.assertIsNone(output["CVE-2020-0601"]["Summary"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Exploit-DB"])
-
-    def test_get_cve_information_returns_None_as_exploit_db_when_refmap_key_missing(self):
-        '''
-        Test to check if the function returns None
-        as the exploit db value when the refmap key
-        is missing in the response.
-        '''
-
-        mock_get_patcher = patch('requests.get')
-
-        path = get_path('resources/cve_response_missing_refmap.json')
-
-        with open(str(path)) as test_json_file:
-            test_text = json.load(test_json_file)
-            test_text = json.dumps(test_text)
-            test_list = ["CVE-2020-0601"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = Mock(status_code=200, text=test_text)
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
-
-        self.assertIsNotNone(output)
-        self.assertIsInstance(output, dict)
-        self.assertTrue(len(output) == 1)
-        self.assertIsInstance(output["CVE-2020-0601"], dict)
-        self.assertTrue(len(output["CVE-2020-0601"]) == 5)
-        self.assertIsNotNone(output["CVE-2020-0601"]["CVS-Score"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Complexity"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Vektor"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Summary"])
-        self.assertIsNone(output["CVE-2020-0601"]["Exploit-DB"])
-
-    def test_get_cve_information_returns_None_as_exploit_db_when_exploit_db_key_missing(self):
-        '''
-        Test to check if the function returns None
-        as the exploit db value when the exploit db
-        key is missing in the response.
-        '''
-
-        mock_get_patcher = patch('requests.get')
-
-        path = get_path('resources/cve_response_missing_exploit_db.json')
-
-        with open(str(path)) as test_json_file:
-            test_text = json.load(test_json_file)
-            test_text = json.dumps(test_text)
-            test_list = ["CVE-2020-0601"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = Mock(status_code=200, text=test_text)
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
-
-        self.assertIsNotNone(output)
-        self.assertIsInstance(output, dict)
-        self.assertTrue(len(output) == 1)
-        self.assertIsInstance(output["CVE-2020-0601"], dict)
-        self.assertTrue(len(output["CVE-2020-0601"]) == 5)
-        self.assertIsNotNone(output["CVE-2020-0601"]["CVS-Score"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Complexity"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Vektor"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Summary"])
-        self.assertIsNone(output["CVE-2020-0601"]["Exploit-DB"])
-
-    def test_get_cve_information_returns_valid_dict_when_given_valid_response_with_all_keys(self):
-        '''
-        Test to check if the function returns a
-        valid dict when the response is valid
-        and contains all keys.
-        '''
-
-        mock_get_patcher = patch('requests.get')
-
-        path = get_path('resources/cve_response_valid.json')
-
-        with open(str(path)) as test_json_file:
-            test_text = json.load(test_json_file)
-            test_text = json.dumps(test_text)
-            test_list = ["CVE-2020-0601"]
-
-        mock_get = mock_get_patcher.start()
-
-        mock_get.return_value = Mock(status_code=200, text=test_text)
-
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
-
-        mock_get_patcher.stop()
-
-        self.assertIsNotNone(output)
-        self.assertIsInstance(output, dict)
-        self.assertTrue(len(output) == 1)
-        self.assertIsInstance(output["CVE-2020-0601"], dict)
-        self.assertTrue(len(output["CVE-2020-0601"]) == 5)
-        self.assertIsNotNone(output["CVE-2020-0601"]["CVS-Score"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Complexity"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Vektor"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Summary"])
-        self.assertIsNotNone(output["CVE-2020-0601"]["Exploit-DB"])
+        self.assertTrue(len(output) == 2)
+        self.assertIsInstance(output["TEST_KEY"], str)
+        self.assertIsNotNone(output["TEST_KEY"])
+        self.assertEqual(output["TEST_KEY"], "TEST_VALUE")
+        self.assertIsInstance(output["TEST_KEY_NEW"], str)
+        self.assertIsNotNone(output["TEST_KEY_NEW"])
+        self.assertEqual(output["TEST_KEY_NEW"], "TEST_VALUE")
