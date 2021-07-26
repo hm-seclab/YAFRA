@@ -1,12 +1,12 @@
 '''
-Tests for cve_information.py
+Tests for loader.py
 '''
 import os
 import json
 from unittest import TestCase
 from unittest.mock import patch, Mock
 
-from libs.cve.cve_information import get_cve_information
+from libs.extensions.loader import Extension, generate_dict_with_jsonfield_and_reportfield, load_extensions
 from libs.kafka.logging import LogMessage
 
 
@@ -23,34 +23,44 @@ def get_path(relpath):
     return filepath
 
 
-class CveInformationTests(TestCase):
+class ExtensionsLoaderTests(TestCase):
     '''
-    Tests for cve information
+    Tests for the extensions class.
     '''
 
-    def test_get_cve_information_returns_empty_dict_when_given_empty_list_as_parameter(self):
+    def setUp(self) -> None:
+        self.test_extension = Extension("TEST_NAME", "TEST_FIELD", "TEST_PATTERN", "TEST_REPORTFIELD", "TEST_MISPTYPE", 0, 0, False)
+
+    # def test_generate_dict_with_jsonfield_and_reportfield(self):
+    #
+    #     test_list = [self.test_extension]
+    #
+    #     output = generate_dict_with_jsonfield_and_reportfield(test_list, "TEST_SERVICENAME")
+    #     print(output)
+
+    def test_generate_dict_with_jsonfield_and_reportfield_returns_empty_dict_when_given_empty_list_as_parameter(self):
         '''
         Test to check if the function returns an empty dict
         when an empty list has been given as a parameter.
         '''
         test_list = []
 
-        output = get_cve_information(test_list, "TEST_SERVICENAME")
+        output = generate_dict_with_jsonfield_and_reportfield(test_list, "TEST_SERVICENAME")
 
         self.assertIsNotNone(output)
         self.assertIsInstance(output, dict)
         self.assertTrue(len(output) == 0)
 
-    def test_get_cve_information_throws_exception_when_given_None_as_parameter(self):
+    def test_generate_dict_with_jsonfield_and_reportfield_throws_exception_when_given_None_as_parameter(self):
         '''
         Test to check if the function throws an exception,
         when None has been given as a parameter.
         '''
 
         with patch.object(LogMessage, "log", return_value="ERROR"):
-            self.assertRaises(Exception, get_cve_information(None, "TEST_SERVICENAME"))
+            self.assertRaises(Exception, generate_dict_with_jsonfield_and_reportfield(None, "TEST_SERVICENAME"))
 
-    def test_get_cve_information_throws_exception_when_given_None_as_list_element(self):
+    def test_generate_dict_with_jsonfield_and_reportfield_throws_exception_when_given_None_as_list_element(self):
         '''
         Test to check if the function throws an exception,
         when None has been given as a list element.
@@ -58,12 +68,12 @@ class CveInformationTests(TestCase):
         test_list = [None]
 
         with patch.object(LogMessage, "log", return_value="ERROR"):
-            self.assertRaises(Exception, get_cve_information(test_list, "TEST_SERVICENAME"))
+            self.assertRaises(Exception, generate_dict_with_jsonfield_and_reportfield(test_list, "TEST_SERVICENAME"))
 
-    def test_get_cve_information_returns_empty_dict_when_not_given_string_as_parameter(self):
+    def test_generate_dict_with_jsonfield_and_reportfield_returns_empty_dict_when_not_given_extension_as_list_element(self):
         '''
         Test to check if the function returns an empty dict
-        when a string has not been given as a parameter.
+        when an extension has not been given as list element.
         '''
         test_list_int = [1, 2]
         test_list_list = [[], []]
@@ -73,11 +83,11 @@ class CveInformationTests(TestCase):
         dict_string["key1"] = [1, 2]
         test_list_dict_string = [dict_string]
 
-        output_int = get_cve_information(test_list_int, "TEST_SERVICENAME")
-        output_list = get_cve_information(test_list_list, "TEST_SERVICENAME")
-        output_list_string = get_cve_information(test_list_list_string, "TEST_SERVICENAME")
-        output_dict = get_cve_information(test_list_dict, "TEST_SERVICENAME")
-        output_dict_string = get_cve_information(test_list_dict_string, "TEST_SERVICENAME")
+        output_int = generate_dict_with_jsonfield_and_reportfield(test_list_int, "TEST_SERVICENAME")
+        output_list = generate_dict_with_jsonfield_and_reportfield(test_list_list, "TEST_SERVICENAME")
+        output_list_string = generate_dict_with_jsonfield_and_reportfield(test_list_list_string, "TEST_SERVICENAME")
+        output_dict = generate_dict_with_jsonfield_and_reportfield(test_list_dict, "TEST_SERVICENAME")
+        output_dict_string = generate_dict_with_jsonfield_and_reportfield(test_list_dict_string, "TEST_SERVICENAME")
 
         self.assertIsNotNone(output_int)
         self.assertIsNotNone(output_list)
@@ -94,6 +104,90 @@ class CveInformationTests(TestCase):
         self.assertTrue(len(output_list_string) == 0)
         self.assertTrue(len(output_dict) == 0)
         self.assertTrue(len(output_dict_string) == 0)
+
+    def test_generate_dict_with_jsonfield_and_reportfield_throws_exception_when_None_as_json_field(self):
+        '''
+        Test to check if the function throws an exception
+        when the json field is None.
+        '''
+        test_extension = Extension("TEST_NAME", None, "TEST_PATTERN", "TEST_REPORTFIELD", "TEST_MISPTYPE", 0, 0,
+                                   False)
+        test_list = [test_extension]
+
+        with patch.object(LogMessage, "log", return_value="ERROR"):
+            self.assertRaises(Exception, generate_dict_with_jsonfield_and_reportfield(test_list, "TEST_SERVICENAME"))
+
+    def test_generate_dict_with_jsonfield_and_reportfield_throws_exception_when_None_as_report_field(self):
+        '''
+        Test to check if the function throws an exception
+        when the report field is None.
+        '''
+        test_extension = Extension("TEST_NAME", "TEST_FIELD", "TEST_PATTERN", None, "TEST_MISPTYPE", 0, 0,
+                                   False)
+        test_list = [test_extension]
+
+        with patch.object(LogMessage, "log", return_value="ERROR"):
+            self.assertRaises(Exception, generate_dict_with_jsonfield_and_reportfield(test_list, "TEST_SERVICENAME"))
+
+    def test_generate_dict_with_jsonfield_and_reportfield_throws_exception_when_None_as_json_field_and_None_as_report_field(self):
+        '''
+        Test to check if the function throws an exception
+        when the json field and the report field is None.
+        '''
+        test_extension = Extension("TEST_NAME", None, "TEST_PATTERN", None, "TEST_MISPTYPE", 0, 0,
+                                   False)
+        test_list = [test_extension]
+
+        with patch.object(LogMessage, "log", return_value="ERROR"):
+            self.assertRaises(Exception, generate_dict_with_jsonfield_and_reportfield(test_list, "TEST_SERVICENAME"))
+
+    def test_generate_dict_with_jsonfield_and_reportfield_returns_valid_dict_when_given_valid_extension_with_valid_json_field_and_valid_report_field_as_parameter(self):
+        '''
+        Test to check if the function returns a valid dict
+        when a valid extension with valid json field and
+        valid report field has been given as a paramter.
+        '''
+        test_extension = Extension("TEST_NAME", "TEST_FIELD", "TEST_PATTERN", "TEST_REPORTFIELD", "TEST_MISPTYPE", 0, 0,
+                                   False)
+        test_list = [test_extension]
+
+        output = generate_dict_with_jsonfield_and_reportfield(test_list, "TEST_SERVICENAME")
+
+        self.assertIsNotNone(output)
+        self.assertIsInstance(output, dict)
+        self.assertTrue(len(output) == 1)
+        self.assertIsInstance(output["TEST_FIELD"], str)
+        self.assertIsNotNone(output["TEST_FIELD"])
+        self.assertEqual(output["TEST_FIELD"], "TEST_REPORTFIELD")
+
+    def test_ResolutionSLA_Full(self):
+        with patch('os.listdir') as mock_listdir:
+            mock_listdir.return_value = ['imphash_marked.yafex', 'dogecoin.yafex', 'apt.yafex', 'httprequests.yafex', 'cwe.yafex', 'cisaalerts.yafex', 'base64.yafex', 'ethereum.yafex', 'githubrepository.yafex', 'msbulltin.yafex', 'port_protocol.yafex', 'ports.yafex', 'size_bytes.yafex', 'analysisreport.yafex', 'mitresoftware.yafex', 'regkeys.yafex', 'mime-type.yafex', 'dash.yafex', 'cisabulltin.yafex', 'filenames.yafex', 'githubuser.yafex', 'windows_file_paths.yafex', 'mar-id.yafex', 'onion.yafex', 'ipport.yafex']
+            # mock_abspath.return_value = '../../extensions'
+
+            with patch.object(LogMessage, "log", return_value="ERROR"):
+                self.assertRaises(Exception, load_extensions("TEST_SERVICENAME"))
+
+    def test_load_extensions(self):
+        '''
+        Test to check if the function returns a valid dict
+        when a valid extension with valid json field and
+        valid report field has been given as a paramter.
+        '''
+
+
+        mock_abspath_patcher = patch('os.listdir')
+        mock_abspath_patcher = patch('os.path.abspath')
+
+        test_list = ["INVALID_CVEEE"]
+
+        mock_list_dir = mock_abspath_patcher.start()
+
+        mock_list_dir.return_value = ['imphash_marked.yafex', 'dogecoin.yafex', 'apt.yafex', 'httprequests.yafex', 'cwe.yafex', 'cisaalerts.yafex', 'base64.yafex', 'ethereum.yafex', 'githubrepository.yafex', 'msbulltin.yafex', 'port_protocol.yafex', 'ports.yafex', 'size_bytes.yafex', 'analysisreport.yafex', 'mitresoftware.yafex', 'regkeys.yafex', 'mime-type.yafex', 'dash.yafex', 'cisabulltin.yafex', 'filenames.yafex', 'githubuser.yafex', 'windows_file_paths.yafex', 'mar-id.yafex', 'onion.yafex', 'ipport.yafex']
+
+        output = load_extensions("TEST_SERVICENAME")
+
+        mock_abspath_patcher.stop()
 
     def test_get_cve_information_returns_empty_dict_when_None_as_the_response(self):
         '''

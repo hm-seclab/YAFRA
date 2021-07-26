@@ -63,6 +63,8 @@ def generate_dict_with_jsonfield_and_reportfield(extensions, servicename):
     dict_j_r = {}
     try:
         for ext in extensions:
+            if type(ext) is not Extension:
+                continue
             dict_j_r[ext.field] = ext.reportfield
     except Exception as error:
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
