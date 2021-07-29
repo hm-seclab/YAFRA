@@ -29,7 +29,7 @@ def create_repository_if_not_exists(gitlabserver, token, repository, servicename
             gprojects = gitlab_instance.projects.list(all=True)
             project_names = [project.name for project in gprojects]
             if not repository in project_names:
-                LogMessage(f"Creating new repository: {repository}", LogMessage.LogTyp.WARNING, servicename).log()
+                LogMessage(f"Creating new repository: {repository}", LogMessage.LogTyp.INFO, servicename).log()
                 gprojects = gitlab_instance.projects.create({'name': repository})
                 gprojects.avatar = open(os.path.abspath("../assets/icon.png"), 'rb')
                 gprojects.save()
@@ -44,7 +44,7 @@ def create_repository_if_not_exists(gitlabserver, token, repository, servicename
                                 'content': json.dumps(json.load(file), indent=4, sort_keys=True),
                             }]
                     })
-                    LogMessage(f"The blacklist has been added to the repository: {repository}", LogMessage.LogTyp.WARNING, servicename).log()
+                    LogMessage(f"The blacklist has been added to the repository: {repository}", LogMessage.LogTyp.INFO, servicename).log()
                 if 'README.md' in [gprojects.repository_tree(branch='master')]:
                         gprojects.commits.create({
                         'branch': 'master',
@@ -100,7 +100,7 @@ def __create_datasources_in_repository(gprojects, servicename):
                 ]
             })
         datasources_branch.protect()
-        LogMessage("New datasources have been added to a new protected branch with name datasources", LogMessage.LogTyp.WARNING, servicename).log()
+        LogMessage("New datasources have been added to a new protected branch with name datasources", LogMessage.LogTyp.INFO, servicename).log()
     except Exception as error:
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
 
