@@ -1,27 +1,14 @@
 '''
 Tests for loader.py
 '''
-import os
 import re
 from unittest import TestCase
 from unittest.mock import patch
 
+from libs.core.get_path import get_path
 from libs.extensions.loader import Extension, generate_dict_with_jsonfield_and_reportfield, load_extensions, \
     append_extensions_misp_types
 from libs.kafka.logging import LogMessage
-
-
-def get_path(relpath):
-    '''
-    get_path will get the path
-    for a given file.
-    @param relpath will be the relative path to a file
-    @return returns the path to the file.
-    '''
-    abspath = os.path.abspath(__file__)
-    dirname = os.path.dirname(abspath)
-    filepath = os.path.join(dirname, relpath)
-    return filepath
 
 
 class ExtensionsLoaderTests(TestCase):
@@ -157,7 +144,7 @@ class ExtensionsLoaderTests(TestCase):
         an empty list, when the status inside
         the yafex file is missing.
         '''
-        test_yafex_file_path = get_path('resources/test_extension_status_missing.yafex')
+        test_yafex_file_path = get_path(__file__, 'resources/test_extension_status_missing.yafex')
 
         with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
             mock_listdir.return_value = ['test_extension_status_missing.yafex']
@@ -175,7 +162,7 @@ class ExtensionsLoaderTests(TestCase):
         an empty list, when the status inside
         the yafex file is None.
         '''
-        test_yafex_file_path = get_path('resources/test_extension_status_None.yafex')
+        test_yafex_file_path = get_path(__file__, 'resources/test_extension_status_None.yafex')
 
         with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
             mock_listdir.return_value = ['test_extension_status_None.yafex']
@@ -194,7 +181,7 @@ class ExtensionsLoaderTests(TestCase):
         an empty list, when the status inside
         the yafex file is disabled.
         '''
-        test_yafex_file_path = get_path('resources/test_extension_status_disabled.yafex')
+        test_yafex_file_path = get_path(__file__, 'resources/test_extension_status_disabled.yafex')
 
         with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
             mock_listdir.return_value = ['test_extension_status_disabled.yafex']
@@ -212,7 +199,7 @@ class ExtensionsLoaderTests(TestCase):
         an empty list, when the yafex file
         is empty.
         '''
-        test_yafex_file_path = get_path('resources/test_extension_empty.yafex')
+        test_yafex_file_path = get_path(__file__, 'resources/test_extension_empty.yafex')
 
         with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
             mock_listdir.return_value = ['test_extension_empty.yafex']
@@ -230,7 +217,7 @@ class ExtensionsLoaderTests(TestCase):
         an empty list, when the name in the
         yafex file is empty.
         '''
-        test_yafex_file_path = get_path('resources/test_extension_empty_name.yafex')
+        test_yafex_file_path = get_path(__file__, 'resources/test_extension_empty_name.yafex')
 
         with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
             mock_listdir.return_value = ['test_extension_empty_name.yafex']
@@ -249,7 +236,7 @@ class ExtensionsLoaderTests(TestCase):
         the group value, when no group is
         given inside the yafex file.
         '''
-        test_yafex_file_path = get_path('resources/test_extension_no_group.yafex')
+        test_yafex_file_path = get_path(__file__, 'resources/test_extension_no_group.yafex')
 
         with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
             mock_listdir.return_value = ['test_extension_no_group.yafex']
@@ -295,7 +282,7 @@ class ExtensionsLoaderTests(TestCase):
         the group value, when the group type
         is not int.
         '''
-        test_yafex_file_path = get_path('resources/test_extension_group_string.yafex')
+        test_yafex_file_path = get_path(__file__, 'resources/test_extension_group_string.yafex')
 
         with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
             mock_listdir.return_value = ['test_extension_group_string.yafex']
@@ -341,7 +328,7 @@ class ExtensionsLoaderTests(TestCase):
         as the hidden value, when no hidden
         is given inside the yafex file.
         '''
-        test_yafex_file_path = get_path('resources/test_extension_no_hidden.yafex')
+        test_yafex_file_path = get_path(__file__, 'resources/test_extension_no_hidden.yafex')
 
         with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
             mock_listdir.return_value = ['test_extension_no_hidden.yafex']
@@ -387,7 +374,7 @@ class ExtensionsLoaderTests(TestCase):
         the hidden value, when the hidden type
         is not bool.
         '''
-        test_yafex_file_path = get_path('resources/test_extension_hidden_string.yafex')
+        test_yafex_file_path = get_path(__file__, 'resources/test_extension_hidden_string.yafex')
 
         with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
             mock_listdir.return_value = ['test_extension_hidden_string.yafex']
@@ -432,7 +419,7 @@ class ExtensionsLoaderTests(TestCase):
         a valid extension object, when all
         fields are set properly.
         '''
-        test_yafex_file_path = get_path('resources/test_extension_valid.yafex')
+        test_yafex_file_path = get_path(__file__, 'resources/test_extension_valid.yafex')
 
         with patch('os.listdir') as mock_listdir, patch('os.path.abspath') as mock_abspath:
             mock_listdir.return_value = ['test_extension_valid.yafex']

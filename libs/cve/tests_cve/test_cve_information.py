@@ -1,26 +1,13 @@
 '''
 Tests for cve_information.py
 '''
-import os
 import json
 from unittest import TestCase
 from unittest.mock import patch, Mock
 
+from libs.core.get_path import get_path
 from libs.cve.cve_information import get_cve_information
 from libs.kafka.logging import LogMessage
-
-
-def get_path(relpath):
-    '''
-    get_path will get the path
-    for a given file.
-    @param relpath will be the relative path to a file
-    @return returns the path to the file.
-    '''
-    abspath = os.path.abspath(__file__)
-    dirname = os.path.dirname(abspath)
-    filepath = os.path.join(dirname, relpath)
-    return filepath
 
 
 class CveInformationTests(TestCase):
@@ -265,7 +252,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        path = get_path('resources/cve_response_missing_cvss.json')
+        path = get_path(__file__, 'resources/cve_response_missing_cvss.json')
 
         with open(str(path)) as test_json_file:
             test_text = json.load(test_json_file)
@@ -301,7 +288,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        path = get_path('resources/cve_response_missing_access.json')
+        path = get_path(__file__, 'resources/cve_response_missing_access.json')
 
         with open(str(path)) as test_json_file:
             test_text = json.load(test_json_file)
@@ -336,7 +323,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        path = get_path('resources/cve_response_missing_complexity.json')
+        path = get_path(__file__, 'resources/cve_response_missing_complexity.json')
 
         with open(str(path)) as test_json_file:
             test_text = json.load(test_json_file)
@@ -371,7 +358,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        path = get_path('resources/cve_response_missing_vector.json')
+        path = get_path(__file__, 'resources/cve_response_missing_vector.json')
 
         with open(str(path)) as test_json_file:
             test_text = json.load(test_json_file)
@@ -406,7 +393,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        path = get_path('resources/cve_response_missing_summary.json')
+        path = get_path(__file__, 'resources/cve_response_missing_summary.json')
 
         with open(str(path)) as test_json_file:
             test_text = json.load(test_json_file)
@@ -441,7 +428,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        path = get_path('resources/cve_response_missing_refmap.json')
+        path = get_path(__file__, 'resources/cve_response_missing_refmap.json')
 
         with open(str(path)) as test_json_file:
             test_text = json.load(test_json_file)
@@ -476,7 +463,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        path = get_path('resources/cve_response_missing_exploit_db.json')
+        path = get_path(__file__, 'resources/cve_response_missing_exploit_db.json')
 
         with open(str(path)) as test_json_file:
             test_text = json.load(test_json_file)
@@ -511,7 +498,7 @@ class CveInformationTests(TestCase):
 
         mock_get_patcher = patch('requests.get')
 
-        path = get_path('resources/cve_response_valid.json')
+        path = get_path(__file__, 'resources/cve_response_valid.json')
 
         with open(str(path)) as test_json_file:
             test_text = json.load(test_json_file)
