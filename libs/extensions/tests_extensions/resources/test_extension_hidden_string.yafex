@@ -1,0 +1,10 @@
+Name: TEST_NAME
+Field: test_field
+Pattern: (AR[0-9]{2}-[0-9a-zA-Z]{4,5})
+PatternArgs: 0
+Summary: Test Summary
+Status: enabled
+Reportfield: Test Report Field
+MISPType: test_misp_type
+Hidden: TEST_STRING
+Group: 0

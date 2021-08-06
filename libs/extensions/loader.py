@@ -63,6 +63,8 @@ def generate_dict_with_jsonfield_and_reportfield(extensions, servicename):
     dict_j_r = {}
     try:
         for ext in extensions:
+            if type(ext) is not Extension:
+                continue
             dict_j_r[ext.field] = ext.reportfield
     except Exception as error:
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
@@ -81,9 +83,25 @@ def load_extensions(servicename):
                 docker_filep = os.path.abspath(os.path.join("../extensions", ext))
                 with open(docker_filep) as file:
                     data = yaml.load(file, Loader=yaml.FullLoader)
+                    if data is None:
+                        continue
+                    if 'Status' not in data or data['Status'] is None or type(data['Status']) is not str:
+                        continue
                     if data['Status'] == "enabled":
-                        group = int(data['Group']) if 'Group' in data and data['Group'] is not None else 0
-                        hidden = bool(data['Hidden']) if 'Hidden' in data and data['Hidden'] is not None else False
+                        if 'Name' not in data or data['Name'] is None or type(data['Name']) is not str:
+                            continue
+                        if 'Field' not in data or data['Field'] is None or type(data['Field']) is not str:
+                            continue
+                        if 'Pattern' not in data or data['Pattern'] is None or type(data['Pattern']) is not str:
+                            continue
+                        if 'Reportfield' not in data or data['Reportfield'] is None or type(data['Reportfield']) is not str:
+                            continue
+                        if 'MISPType' not in data or data['MISPType'] is None or type(data['MISPType']) is not str:
+                            continue
+                        if 'PatternArgs' not in data or data['PatternArgs'] is None or type(data['PatternArgs']) is not int:
+                            continue
+                        group = int(data['Group']) if 'Group' in data and data['Group'] is not None and type(data['Group']) is int else 0
+                        hidden = bool(data['Hidden']) if 'Hidden' in data and data['Hidden'] is not None and type(data['Hidden']) is bool else False
                         extensions.append(Extension(str(data['Name']), str(data['Field']), str(data['Pattern']), str(data['Reportfield']), str(data['MISPType']), data['PatternArgs'], group, hidden))
             except Exception as error:
                 LogMessage(str("Extension {} can not be loaded properly.".format(ext)), LogMessage.LogTyp.WARNING, servicename).log()
@@ -92,7 +110,7 @@ def load_extensions(servicename):
     return extensions
 
 
-def append_extensions_misp_types(ctypes, lextensions):
+def append_extensions_misp_types(ctypes, lextensions, servicename):
     '''
     append_extensions_misp_types will add all misp-types from the
         extensions into the currentlist of types.
@@ -105,5 +123,5 @@ def append_extensions_misp_types(ctypes, lextensions):
             if extension.reportfield not in ctypes.keys():
                 ctypes[extension.reportfield] = extension.misptype
     except Exception as error:
-        LogMessage(str(error), LogMessage.LogTyp.ERROR, "Library").log()
+        LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
     return ctypes
