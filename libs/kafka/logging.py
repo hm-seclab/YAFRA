@@ -23,7 +23,7 @@ def send_health_message(kafkaserver, topicname, servicename):
     @param serivcename will be the name of the calling service.
     '''
     try:
-        create_topic_if_not_exists(kafkaserver, topicname)
+        create_topic_if_not_exists(kafkaserver, topicname, servicename)
         producer = KafkaProducer(bootstrap_servers=kafkaserver, client_id=str(servicename), api_version=(2,7,0))
         message = json.dumps({
             "Sender": servicename,

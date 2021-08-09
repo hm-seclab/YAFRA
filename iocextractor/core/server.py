@@ -284,7 +284,7 @@ class Extractor(Server):
         @param *args and **kwargs will be the vargs passed to the __call__ function
             of the server-class
         '''
-        create_topic_if_not_exists(KAFKA_SERVER, IOC_TOPIC_NAME)
+        create_topic_if_not_exists(KAFKA_SERVER, IOC_TOPIC_NAME, SERVICENAME)
         Extractor.BLACKLIST = Extractor.refetch_blacklist()
         scheduler.start()
         Thread(target=Extractor.consume_findings_from_scraper, daemon=True).start()

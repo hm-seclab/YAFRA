@@ -116,7 +116,7 @@ class Sysmonserver(Server):
         @param self will be Sysmonserver-object. 
         '''
         try:
-            create_topic_if_not_exists(KAFKA_SERVER, LOGGING_TOPIC_NAME)
+            create_topic_if_not_exists(KAFKA_SERVER, LOGGING_TOPIC_NAME, SERVICENAME)
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
     
