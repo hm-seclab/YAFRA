@@ -233,9 +233,10 @@ class Extractor(Server):
         try:
             if (json_data := json.loads(data.value.decode("utf-8"))) is not None:
                 iocs = Extractor.extract_ioc(json_data.get('content'))
-                input_filename = sanitize_title(unsanitized_title=str(json_data.get('title')), servicename=SERVICENAME)
-                iocs['input_filename'] = input_filename
-                Extractor.pushfindings(iocs)
+                if iocs is not None and len(iocs) > 0:
+                    input_filename = sanitize_title(unsanitized_title=str(json_data.get('title')), servicename=SERVICENAME)
+                    iocs['input_filename'] = input_filename
+                    Extractor.pushfindings(iocs)
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
