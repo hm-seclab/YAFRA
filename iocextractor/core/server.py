@@ -11,6 +11,8 @@ import pytz
 import re
 import iocextract as ioce
 
+from scraper.core.static.DataObject import DataObject
+
 sys.path.append('..')
 
 from io import StringIO
@@ -235,7 +237,8 @@ class Extractor(Server):
                 iocs = Extractor.extract_ioc(json_data.get('content'))
                 input_filename = sanitize_title(unsanitized_title=str(json_data.get('title')), servicename=SERVICENAME)
                 iocs['input_filename'] = input_filename
-                Extractor.pushfindings(iocs)
+                if iocs:
+                    Extractor.pushfindings(iocs)
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
