@@ -11,8 +11,6 @@ import pytz
 import re
 import iocextract as ioce
 
-from scraper.core.static.DataObject import DataObject
-
 sys.path.append('..')
 
 from io import StringIO
