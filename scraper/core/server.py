@@ -274,7 +274,7 @@ class Scraper(Server):
         '''
         __call__ override __call__ function from server-class.
         '''
-        create_topic_if_not_exists(KAFKA_SERVER, SCRAPER_TOPIC_NAME, SERVICENAME)
+        create_topic_if_not_exists(KAFKA_SERVER, SCRAPER_TOPIC_NAME)
         Scraper.refetch_sources()
         scheduler.start()
         Thread(target=Scraper.collect_data_from_sources(), daemon=True).start()

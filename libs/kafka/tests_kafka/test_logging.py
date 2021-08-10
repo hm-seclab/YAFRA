@@ -4,7 +4,7 @@ Tests for logging.py
 from unittest import TestCase, mock
 from unittest.mock import patch
 
-from kafka import KafkaProducer
+from kafka.producer import KafkaProducer
 
 from libs.kafka.logging import LogMessage, send_health_message
 

@@ -151,6 +151,6 @@ class Puller(Server):
         __call__
         '''
         for topic in [KAFKA_REPORT_TOPIC, KAFKA_TIMESTAMP_TOPIC]:
-            create_topic_if_not_exists(KAFKA_SERVER, topic, SERVICENAME)
+            create_topic_if_not_exists(KAFKA_SERVER, topic)
         scheduler.start()
         return Server.__call__(self, app, *args, **kwargs)

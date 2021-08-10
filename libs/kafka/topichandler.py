@@ -7,10 +7,8 @@ from kafka.consumer import KafkaConsumer
 from kafka.admin import KafkaAdminClient
 from kafka.admin import NewTopic
 
-from libs.kafka.logging import LogMessage
 
-
-def create_topic_if_not_exists(kafkaserver, topicname, servicename):
+def create_topic_if_not_exists(kafkaserver, topicname):
     '''
     create_topic_if_not_exists will create a given topic incase it does not already exists.
     @param kafkaserver will be the ip:port where the server is running.
@@ -25,4 +23,4 @@ def create_topic_if_not_exists(kafkaserver, topicname, servicename):
                 admin_client.create_topics(new_topics=topic_list, validate_only=False)
                 print("[+] Created a new topic. Name: {}".format(topicname))
     except Exception as error:
-        LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
+        print(error)

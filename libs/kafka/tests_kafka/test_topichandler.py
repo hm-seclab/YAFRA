@@ -19,7 +19,7 @@ class TopicHandlerTests(TestCase):
         when None has been given as the kafkaserver parameter.
         '''
         with patch.object(LogMessage, "log", return_value="ERROR"):
-            self.assertRaises(Exception, create_topic_if_not_exists(None, "TEST_TOPICNAME", "TEST_SERVICENAME"))
+            self.assertRaises(Exception, create_topic_if_not_exists(None, "TEST_TOPICNAME"))
 
     def test_create_topic_if_not_exists_throws_an_exception_when_given_None_as_topicname_parameter(self):
         '''
@@ -27,7 +27,7 @@ class TopicHandlerTests(TestCase):
         when None has been given as the topicname parameter.
         '''
         with patch.object(LogMessage, "log", return_value="ERROR"):
-            self.assertRaises(Exception, create_topic_if_not_exists("TEST_KAFKASERVER", None, "TEST_SERVICENAME"))
+            self.assertRaises(Exception, create_topic_if_not_exists("TEST_KAFKASERVER", None))
 
     @mock.patch('libs.kafka.topichandler.KafkaConsumer')
     @mock.patch('libs.kafka.topichandler.KafkaAdminClient')
@@ -38,5 +38,5 @@ class TopicHandlerTests(TestCase):
         '''
         mock_kafka_admin_client_instance = mock_kafka_admin_client.return_value
         mock_kafka_admin_client_instance.create_topics.side_effect = "TEST"
-        create_topic_if_not_exists("TEST_KAFKASERVER", "TEST_TOPICNAME", "TEST_SERVICENAME")
+        create_topic_if_not_exists("TEST_KAFKASERVER", "TEST_TOPICNAME")
         mock_kafka_admin_client.assert_called_once()
