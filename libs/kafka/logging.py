@@ -13,6 +13,7 @@ from kafka.producer import KafkaProducer
 from libs.core.environment import envvar
 from .topichandler import create_topic_if_not_exists
 
+
 def send_health_message(kafkaserver, topicname, servicename):
     '''
     send_health_message will send a fine to the KAFKA server
@@ -31,7 +32,8 @@ def send_health_message(kafkaserver, topicname, servicename):
         })
         producer.send(topicname, message.encode('UTF-8'))
     except Exception as error:
-        print(error)
+        LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
+
 
 class LogMessage():
     '''
