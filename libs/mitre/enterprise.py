@@ -7,7 +7,8 @@ from pyattck import Attck
 
 from libs.kafka.logging import LogMessage
 
-def get_mitre_information_tactics_enterpise(tactic_list, servicename):
+
+def get_mitre_information_tactics_enterprise(tactic_list, servicename):
     '''
     get_mitre_information_tactics_enterpise will generate information about
         tacitc on an enterprise level. The information will be the same as on
