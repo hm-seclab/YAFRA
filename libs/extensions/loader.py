@@ -82,7 +82,7 @@ def load_extensions(servicename):
             try:
                 docker_filep = os.path.abspath(os.path.join("../extensions", ext))
                 with open(docker_filep) as file:
-                    data = yaml.safe_load(file, Loader=yaml.FullLoader)
+                    data = yaml.load(file, Loader=yaml.FullLoader) # nosec
                     if data is None:
                         continue
                     if 'Status' not in data or data['Status'] is None or type(data['Status']) is not str:

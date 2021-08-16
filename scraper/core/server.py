@@ -36,8 +36,7 @@ SERVICENAME = envvar("SERVICENAME", "Scraper")
 KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
 SCRAPER_TOPIC_NAME = envvar("SCRAPER_TOPIC", "datascraper")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
-# nosec
-MISP_SERVER = envvar("MISP_SERVER", "http://0.0.0.0")
+MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0") # nosec
 MISP_TOKEN = envvar("MISP_TOKEN", None)
 MISP_CERT_VERIFY = True if envvar("MISP_VERIF", True) == "True" else False
 # nosec
