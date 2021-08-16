@@ -215,14 +215,14 @@ def handle_ip_object(event, obj, misp, servicename):
     @param servicename will be the name of the calling service.
     '''
     try:
-        t = MISPObject('ip-port', standalone=False)
+        misp_instance = MISPObject('ip-port', standalone=False)
         data = {
                 'ip-dst': obj['IP'], 
                 'text': obj['Country'],
             }
         for key, value in data.items():
-            t.add_attribute(key, value)
-        misp.add_object(event, t)
+            misp_instance.add_attribute(key, value)
+        misp.add_object(event, misp_instance)
     except Exception as error:
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
 
@@ -249,8 +249,8 @@ def handle_misp_event(misp, findings, servicename):
                     for domain in findings['data']['Network']['Domains']:
                         handle_domain_object(event, domain, misp, servicename)
                 if 'IPv4 and IPv6' in net_keys and (ip_keys := findings['data']['Network']['IPv4 and IPv6'].keys()) is not None and 'IPv4-Address' in ip_keys:        
-                    for ip in findings['data']['Network']['IPv4 and IPv6']['IPv4-Address']:
-                        handle_ip_object(event, ip, misp, servicename)
+                    for ipv4 in findings['data']['Network']['IPv4 and IPv6']['IPv4-Address']:
+                        handle_ip_object(event, ipv4, misp, servicename)
             if findings['data'] and len(findings['data']) > 0:
                 event.publish()
         else:

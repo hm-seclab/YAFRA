@@ -19,7 +19,10 @@ from libs.kafka.logging import LogMessage
 
 def detect_lang(text, servicename):
     '''
-    
+    detect_lang will try to detect the language used by the report.
+    @param text will be the text to check.
+    @param servicename will be the name of the calling service. 
+    @return the detected language as a string.
     '''
     try:
         lang = detect(text)
@@ -32,7 +35,10 @@ def detect_lang(text, servicename):
 
 def summarize(text, servicename):
     '''
-    
+    summarize will summarize the given text.
+    @param text will be the text to summarize.
+    @param servicename will be the name of the calling service. 
+    @return the summarization as string.
     '''
     sum = ""
     try:
