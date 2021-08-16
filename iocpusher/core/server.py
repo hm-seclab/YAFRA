@@ -27,7 +27,7 @@ from libs.gitlabl.issues import create_issues
 from libs.cve.cve_information import get_cve_information
 from libs.virustotal.domains import get_vt_information_domains
 from libs.virustotal.ips import get_vt_information_ipv4
-from libs.mitre.enterprise import get_mitre_information_tactics_enterpise
+from libs.mitre.enterprise import get_mitre_information_tactics_enterprise
 from libs.mitre.enterprise import get_mitre_information_techniques_enterpise
 from libs.markdown.generator import generate_markdown_file
 from libs.extensions.loader import load_extensions
@@ -162,7 +162,7 @@ class Pusher(Server):
             if 'domains' in finding_keys and (domains := findings['domains']) is not None and len(domains) > 0:
                 domains_details = get_vt_information_domains(VT_API_KEY, domains, SERVICENAME)
             if 'attack_tactics' in finding_keys and (mitre_attack_tac_ent := findings['attack_tactics']['enterprise']) is not None and len(mitre_attack_tac_ent) > 0:
-                m_e_tactics = get_mitre_information_tactics_enterpise(mitre_attack_tac_ent, SERVICENAME)
+                m_e_tactics = get_mitre_information_tactics_enterprise(mitre_attack_tac_ent, SERVICENAME)
             if 'attack_techniques' in finding_keys and (mitre_attack_tech_ent := findings['attack_techniques']['enterprise']) is not None and len(mitre_attack_tech_ent) > 0:
                 m_e_techniques = get_mitre_information_techniques_enterpise(mitre_attack_tech_ent, SERVICENAME)
             improved_findings = {
