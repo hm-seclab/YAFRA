@@ -1,4 +1,3 @@
-
 # Source files
 # ============
 *.pxd    text diff=python
@@ -21,3 +20,5 @@
 
 # Jupyter notebook
 *.ipynb  python
+*.yafex linguist-language=YAML
+

@@ -3,12 +3,10 @@ This file contains data used to represent graphics in gitlab.
 """
 
 PIEC_SCHEMA = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v5.json", #TODO use local server/Push to github 
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "All stateactors involved via ipv4.",
   "data": {
-    "values": [
-      
-    ]
+    "values": []
   },
   "mark": {"type": "arc", "innerRadius": 65},
   "encoding": {
@@ -22,9 +20,7 @@ BAR_WEBSITE_TYPES_SCHEMA = {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "Websitetypechart",
   "data": {
-    "values": [
-
-    ]
+    "values": []
   },
   "transform": [
     {
@@ -54,9 +50,7 @@ BAR_WEBSITE_TYPES_SCHEMA = {
 CVE_HEATMAP = {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": {
-    "values": [
-
-    ]
+    "values": []
   },
   "params": [{"name": "highlight", "select": "point"}],
   "mark": {"type": "rect", "strokeWidth": 1},

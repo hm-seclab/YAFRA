@@ -32,12 +32,14 @@ from libs.kafka.logging import LogMessage
 from libs.kafka.logging import send_health_message
 
 SERVICENAME = envvar("SERVICENAME", "Scraper")
+# nosec
 KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
 SCRAPER_TOPIC_NAME = envvar("SCRAPER_TOPIC", "datascraper")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
-MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0")
+MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0") # nosec
 MISP_TOKEN = envvar("MISP_TOKEN", None)
 MISP_CERT_VERIFY = True if envvar("MISP_VERIF", True) == "True" else False
+# nosec
 GITLAB_SERVER = envvar("GITLAB_SERVER", "0.0.0.0:10082")
 GITLAB_TOKEN = envvar("GITLAB_TOKEN", "NOTWORKING")
 GITLAB_REPO_NAME = envvar("GITLAB_REPO_NAME", "IOCFindings")
@@ -89,12 +91,15 @@ class Scraper(Server):
         collect_data_from_sources starts the collection process by scraping data from various given sources.
         '''
         try:
+            LogMessage("Starting to scrape data.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             data_list = [
                     *Scraper.__get_data_from_rss_feed(),
-                    *Scraper.__get_data_from_twitter_feed()]
-                    # *Scraper.__get_data_from_api()
-            for data in data_list:
-                Scraper.push_collected_data(data.__json__())
+                    *Scraper.__get_data_from_twitter_feed(),
+                    *Scraper.__get_data_from_api()]
+            LogMessage(f"Starting to push scraped data to Kafka Topic {SCRAPER_TOPIC_NAME}.", LogMessage.LogTyp.INFO,
+                       SERVICENAME).log()
+            for data in data_list: Scraper.push_collected_data(data.__json__())
+            LogMessage(f"Pushed data to Kafka Topic {SCRAPER_TOPIC_NAME}.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
@@ -105,6 +110,7 @@ class Scraper(Server):
         '''
         ret_val_list = []
         try:
+            LogMessage("Starting to scrape from rss feeds.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             rss_scraper = RssScraper
             url_list = Scraper.SOURCES["rss_sources"]
             for url in url_list:
@@ -149,7 +155,7 @@ class Scraper(Server):
                         date = publication_date.text
 
                     title = "rss_" + str(item_title) + "_" + str(title_url) + "_" + str(date)
-                    data_object = DataObject(content, title, url, date)
+                    data_object = DataObject(str(content), str(title), str(url), str(date))
                     ret_val_list.append(data_object)
 
             amount = str(len(ret_val_list))
@@ -165,33 +171,19 @@ class Scraper(Server):
         '''
         ret_val_list = []
         try:
-
+            LogMessage("Starting to scrape from twitter feeds.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             twitter_scraper = TwitterScraper
             twitter_user_list = Scraper.SOURCES["twitter_sources"]
             for twitter_user in twitter_user_list:
-
                 twitter_feed_list = twitter_scraper.get_twitter_feed(twitter_user)
-
-                if not twitter_feed_list:
-                    continue
-
+                if not twitter_feed_list: continue
                 for tweet in twitter_feed_list:
-
-                    if tweet is None:
-                        continue
-
+                    if tweet is None: continue
                     publication_date = tweet.created_at
-
-                    if publication_date is None:
-                        date = "no_date"
-                    else:
-                        date = publication_date
-
-                    title = "twitter_" + str(twitter_user) + "_" + str(date)
-
-                    data_object = DataObject(tweet.full_text, title, str(twitter_user), date)
+                    publication_date = publication_date if publication_date is not None else "no_date"
+                    title = "twitter_" + str(twitter_user) + "_" + str(publication_date)
+                    data_object = DataObject(str(tweet.full_text), str(title), str(twitter_user), publication_date)
                     ret_val_list.append(data_object)
-
             amount = str(len(ret_val_list))
             LogMessage(f"Found {amount} tweets.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
@@ -205,59 +197,28 @@ class Scraper(Server):
         '''
         ret_val_list = []
         try:
-            print("Stepping into __get_data_from_api")
-
+            LogMessage("Starting to scrape from api's.", LogMessage.LogTyp.INFO, SERVICENAME).log()
             api_scraper = ApiScraper
             url_list = Scraper.SOURCES["api_sources"]
-
             for url in url_list:
                 api_response_list = api_scraper.get_api_response(url)
-
-                if not api_response_list:
-                    continue
-
+                if not api_response_list: continue
                 for api_response in api_response_list:
-
-                    if api_response is None:
-                        continue
-
+                    if api_response is None: continue
                     date = "no_date"
-
-                    if "Published" in api_response:
-                        date = api_response["Published"]
-
-                    if "publish_timestamp" in api_response:
-                        date = api_response["publish_timestamp"]
-
-                    if "time" in api_response:
-                        date = api_response["time"]
-
+                    for key in ["Published", "publish_timestamp", "time"]:
+                        if key in api_response: date = api_response[key]
                     title_url = url
-
-                    if str(url).startswith("http://"):
-                        title_url = url.replace("http://", "")
-
-                    if str(url).startswith("https://"):
-                        title_url = url.replace("https://", "")
-
-                    title = "api_" + str(title_url) + "_" + str(date)
-
-                    data_object = DataObject(api_response, title, url, date)
+                    if str(url).startswith("http://"): title_url = url.replace("http://", "")
+                    if str(url).startswith("https://"): title_url = url.replace("https://", "")
+                    title = "api_{}_{}".format(str(title_url), str(date))
+                    data_object = DataObject(str(api_response), str(title), str(url), str(date))
                     ret_val_list.append(data_object)
-
             amount = str(len(ret_val_list))
             LogMessage(f"Found {amount} api-responses.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
         return ret_val_list
-
-    @staticmethod
-    def __datetime_converter(o):
-        '''
-        helper method for converting the datetime
-        '''
-        if isinstance(o, datetime.datetime):
-            return o.__str__()
 
     @staticmethod
     def push_collected_data(data):
@@ -283,14 +244,16 @@ class Scraper(Server):
         rss_content = {}
         twitter_content = {}
         try:
-            if len(Scraper.SOURCES) <= 0:
-                with open(os.path.abspath("../../datasets/sources/api_sources.json")) as api_content, open(
-                    os.path.abspath("../../datasets/sources/rss_sources.json")) as rss_content, open(
-                    os.path.abspath("../../datasets/sources/twitter_sources.json")) as twitter_content:
+            if Scraper.SOURCES is None or len(Scraper.SOURCES) <= 0:
+                LogMessage("Using local datasources.", LogMessage.LogTyp.INFO, SERVICENAME).log()
+                with open(os.path.abspath("../datasets/sources/api_sources.json")) as api_content, open(
+                    os.path.abspath("../datasets/sources/rss_sources.json")) as rss_content, open(
+                    os.path.abspath("../datasets/sources/twitter_sources.json")) as twitter_content:
                     api_content = json.load(api_content)
                     rss_content = json.load(rss_content)
                     twitter_content = json.load(twitter_content)
             else:
+                LogMessage("Using datasources from gitlab.", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 api_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,
                                                     file="api_sources.json", servicename=SERVICENAME, branch_name="datasources")
                 rss_content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME,

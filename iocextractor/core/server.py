@@ -45,12 +45,17 @@ from libs.kafka.logging import send_health_message
 from libs.extensions.loader import load_extensions
 from libs.gitlabl.files import read_file_from_gitlab
 from libs.gitlabl.sanitize_title import sanitize_title
+from libs.text_summarization.tsummarization import summarize
+
+import traceback
 # ENVIRONMENT-VARS
 SERVICENAME = envvar("SERVICENAME", "Extractor")
 IOC_TOPIC_NAME = envvar("IOC_TOPIC", "ioc")
 SCRAPER_TOPIC_NAME = envvar("SCRAPER_TOPIC", "datascraper")
+# nosec
 KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
+# nosec
 GITLAB_SERVER = envvar("GITLAB_SERVER", "0.0.0.0:10082")
 GITLAB_TOKEN = envvar("GITLAB_TOKEN", "NOTWORKING")
 GITLAB_REPO_NAME = envvar("GITLAB_REPO_NAME", "IOCFindings")
@@ -115,10 +120,12 @@ class Extractor(Server):
         '''
         content = {}
         try:
-            if len(Extractor.BLACKLIST) <= 0:
-                with open(os.path.abspath("../../datasets/blacklist.json")) as content:
+            if Extractor.BLACKLIST is None or len(Extractor.BLACKLIST) <= 0:
+                LogMessage("Using local blacklist.", LogMessage.LogTyp.INFO, SERVICENAME).log()
+                with open(os.path.abspath("../datasets/blacklist.json")) as content:
                     content = json.load(content)
             else:
+                LogMessage("Using blacklist from gitlab.", LogMessage.LogTyp.INFO, SERVICENAME).log()
                 content = read_file_from_gitlab(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, file="blacklist.json", servicename=SERVICENAME, branch_name="master")
                 content = json.loads(content)
             if content is not None:
@@ -173,13 +180,16 @@ class Extractor(Server):
         iocs = {}
         try:
             iocs = find_iocs(pdftext)
+            urls = [rule for rule in ioce.extract_urls(pdftext, refang=True)]
+            iocs['urls'] = list(dict.fromkeys(urls))
             yara_rules = [rule for rule in ioce.extract_yara_rules(pdftext)]
             iocs['yara_rules'] = yara_rules
+            if len(pdftext) > 200: iocs['textsummary'] = summarize(pdftext, SERVICENAME)
             ex_ioc = Extractor.extensions(pdftext)
             iocs = merge_dicts(iocs, filter_dict_values(ex_ioc, SERVICENAME), SERVICENAME)
             iocs = filter_by_blacklist(iocs, Extractor.BLACKLIST, SERVICENAME)
         except Exception as error:
-            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            LogMessage(f"{str(error)} {''.join(traceback.format_tb(error.__traceback__))}", LogMessage.LogTyp.ERROR, SERVICENAME).log()
         return iocs
 
     @staticmethod
@@ -192,7 +202,7 @@ class Extractor(Server):
         '''
         try:
             pdf_content = StringIO()
-            print("Extracted ioc's from file: {}".format(reportpath))
+            LogMessage(f"Extract ioc's from file: {reportpath}", LogMessage.LogTyp.INFO, SERVICENAME).log()
             with open(reportpath, 'rb') as file:
                 resource_manager = PDFResourceManager()
                 device = TextConverter(resource_manager, pdf_content, laparams=LAParams())
@@ -205,6 +215,7 @@ class Extractor(Server):
             iocs['input_filename'] = input_filename
             Extractor.pushfindings(iocs)
             os.remove(reportpath)
+            LogMessage(f"The ioc's had been extracted from the file and the file has been removed: {reportpath}", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
@@ -229,9 +240,10 @@ class Extractor(Server):
         try:
             if (json_data := json.loads(data.value.decode("utf-8"))) is not None:
                 iocs = Extractor.extract_ioc(json_data.get('content'))
-                input_filename = sanitize_title(unsanitized_title=str(json_data.get('title')), servicename=SERVICENAME)
-                iocs['input_filename'] = input_filename
-                Extractor.pushfindings(iocs)
+                if iocs is not None and len(iocs) > 0:
+                    input_filename = sanitize_title(unsanitized_title=str(json_data.get('title')), servicename=SERVICENAME)
+                    iocs['input_filename'] = input_filename
+                    Extractor.pushfindings(iocs)
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 

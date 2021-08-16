@@ -1,0 +1,8 @@
+Name: Mitre Software
+Field: mitre_software
+Pattern: ([S]{1}([0-9]{4}))
+PatternArgs: 0
+Summary: Find known software ids of mitre in reports.
+Status: enabled
+Reportfield: Software in use
+MISPType: comment

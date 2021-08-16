@@ -25,10 +25,11 @@ from libs.kafka.logging import send_health_message
 from libs.misp.event import handle_misp_event
 
 SERVICENAME = envvar("SERVICENAME", "Reporter")
+# nosec
 KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
 REPORT_TOPIC = envvar("REPORT_TOPIC", "rfreport")
-MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0")
+MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0") # nosec
 MISP_TOKEN = envvar("MISP_TOKEN", None)
 MISP_CERT_VERIFY = True if envvar("MISP_VERIF", True) == "True" else False
 
