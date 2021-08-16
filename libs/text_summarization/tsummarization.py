@@ -36,14 +36,14 @@ def summarize(text, servicename):
     '''
     sum = ""
     try:
-        SENTENCES_COUNT = 12
+        SENTENCES_COUNT = 10
         lang = detect_lang(text, servicename).lower()
         parser = PlaintextParser.from_string(text, Tokenizer(lang))
         stemmer = Stemmer(lang)
         summarizer = Summarizer(stemmer)
         summarizer.stop_words = get_stop_words(lang)
         sentences = summarizer(parser.document, SENTENCES_COUNT)
-        for element in sentences: sum += str(element) + " "
+        for element in sentences: sum += str(element) + ". "
     except Exception as error:
         LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
     return sum

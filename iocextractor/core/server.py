@@ -182,7 +182,7 @@ class Extractor(Server):
             iocs['urls'] = list(dict.fromkeys(urls))
             yara_rules = [rule for rule in ioce.extract_yara_rules(pdftext)]
             iocs['yara_rules'] = yara_rules
-            if len(pdftext) > 2500: iocs['textsummary'] = summarize(pdftext, SERVICENAME)
+            if len(pdftext) > 200: iocs['textsummary'] = summarize(pdftext, SERVICENAME)
             ex_ioc = Extractor.extensions(pdftext)
             iocs = merge_dicts(iocs, filter_dict_values(ex_ioc, SERVICENAME), SERVICENAME)
             iocs = filter_by_blacklist(iocs, Extractor.BLACKLIST, SERVICENAME)
@@ -238,6 +238,7 @@ class Extractor(Server):
         try:
             if (json_data := json.loads(data.value.decode("utf-8"))) is not None:
                 iocs = Extractor.extract_ioc(json_data.get('content'))
+                print(json_data.get('title'), len(json_data.get('content')))
                 input_filename = sanitize_title(unsanitized_title=str(json_data.get('title')), servicename=SERVICENAME)
                 iocs['input_filename'] = input_filename
                 Extractor.pushfindings(iocs)
