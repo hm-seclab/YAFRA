@@ -52,8 +52,10 @@ import traceback
 SERVICENAME = envvar("SERVICENAME", "Extractor")
 IOC_TOPIC_NAME = envvar("IOC_TOPIC", "ioc")
 SCRAPER_TOPIC_NAME = envvar("SCRAPER_TOPIC", "datascraper")
+# nosec
 KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
+# nosec
 GITLAB_SERVER = envvar("GITLAB_SERVER", "0.0.0.0:10082")
 GITLAB_TOKEN = envvar("GITLAB_TOKEN", "NOTWORKING")
 GITLAB_REPO_NAME = envvar("GITLAB_REPO_NAME", "IOCFindings")

@@ -12,7 +12,7 @@ from flask_script import Manager
 
 # ENVIRONMENT-VARS
 SERVERPORT = envvar("SERVER_PORT", "8081")
-SERVERADDRESS = envvar("SERVER_ADDRESS", "0.0.0.0")
+SERVERADDRESS = envvar("SERVER_ADDRESS", "127.0.0.1")
 
 app = flaskapp()
 manager = Manager(app)

@@ -47,12 +47,15 @@ from flask_apscheduler import APScheduler
 # ENVIRONMENT-VARS
 SERVICENAME = envvar("SERVICENAME", "Pusher")
 IOC_TOPIC_NAME = envvar("IOC_TOPIC", "ioc")
+# nosec
 KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
+# nosec
 GITLAB_SERVER = envvar("GITLAB_SERVER", "http://0.0.0.0:10082")
 GITLAB_TOKEN = envvar("GITLAB_TOKEN", "NOTWORKING")
 GITLAB_REPO_NAME = envvar("GITLAB_REPO_NAME", "IOCFindings")
 VT_API_KEY = envvar("VIRUS_TOTAL", "None")
+# nosec
 MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0")
 MISP_TOKEN = envvar("MISP_TOKEN", None)
 MISP_CERT_VERIFY = True if envvar("MISP_VERIF", True) == "True" else False

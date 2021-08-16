@@ -32,10 +32,12 @@ from flask_script import Server
 from flask_apscheduler import APScheduler
 
 SERVICENAME = envvar("SERVICENAME", "Puller")
+# nosec
 KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
 KAFKA_REPORT_TOPIC = envvar("REPORT_TOPIC", "rfreport")
 KAFKA_TIMESTAMP_TOPIC = envvar("TIMESTAMP_TOPIC", "committstamps")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
+# nosec
 GITLAB_SERVER = envvar("GITLAB_SERVER", "0.0.0.0:10082")
 GITLAB_TOKEN = envvar("GITLAB_TOKEN", "NOTWORKING")
 GITLAB_REPO_NAME = envvar("GITLAB_REPO_NAME", "IOCFindings")

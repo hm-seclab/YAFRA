@@ -11,7 +11,7 @@ from libs.core.environment import envvar
 from flask_script import Manager
 
 SERVERPORT = envvar("SERVER_PORT", "8080")
-SERVERADDRESS = envvar("SERVER_ADDRESS", "0.0.0.0")
+SERVERADDRESS = envvar("SERVER_ADDRESS", "127.0.0.1")
 
 app = flaskapp()
 manager = Manager(app)
