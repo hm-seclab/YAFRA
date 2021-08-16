@@ -273,8 +273,7 @@ class Pusher(Server):
         '''
         try:
             findings = json.loads(findings.value.decode("utf-8"))
-            # nosec
-            report_name = findings['input_filename'] if 'input_filename' in findings.keys() else random.randint(4, 10000)
+            report_name = findings['input_filename'] if 'input_filename' in findings.keys() else random.randint(4, 10000) # nosec
         except Exception as ex:
             LogMessage("Handling report {} failed with {}".format(findings.value.decode("utf-8"), str(ex)), LogMessage.LogTyp.ERROR, SERVICENAME).log()
             return

@@ -16,9 +16,7 @@ def sanitize_title(unsanitized_title, servicename):
         @param servicename will be the name of the service calling this function.
     @return a sanitized title without any special chars except - in string format.
     '''
-
-    # nosec
-    sanitized_title = hashlib.md5(unsanitized_title.encode('UTF-8')).hexdigest()
+    sanitized_title = hashlib.md5(unsanitized_title.encode('UTF-8')).hexdigest() # nosec
     try:
         unsanitized_title = unsanitized_title.replace(' ', '-')
         sanitized_title = re.sub('[^A-Za-z0-9-]+', '', unsanitized_title)
