@@ -43,13 +43,13 @@ def get_misp_type(keyname):
     @param keyname will be the name of the attribute like domains.
     @return the type as string.
     '''
-    msip_type = "other"
+    misp_type = "other"
     try:
         if keyname in MISP_MAP.keys():
-            msip_type = MISP_MAP[str(keyname)]
+            misp_type = MISP_MAP[str(keyname)]
+        return misp_type
     except Exception:
-        pass
-    return msip_type
+        return misp_type
 
 def create_misp_event(servicename, distribution=0, threat_level_id=4, publish=False, analysis=0, event_info=None):
     '''

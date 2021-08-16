@@ -30,7 +30,7 @@ KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
 REPORT_TOPIC = envvar("REPORT_TOPIC", "rfreport")
 # nosec
-MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0")
+MISP_SERVER = envvar("MISP_SERVER", "http://0.0.0.0")
 MISP_TOKEN = envvar("MISP_TOKEN", None)
 MISP_CERT_VERIFY = True if envvar("MISP_VERIF", True) == "True" else False
 

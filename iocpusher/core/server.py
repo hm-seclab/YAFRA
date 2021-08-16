@@ -56,7 +56,7 @@ GITLAB_TOKEN = envvar("GITLAB_TOKEN", "NOTWORKING")
 GITLAB_REPO_NAME = envvar("GITLAB_REPO_NAME", "IOCFindings")
 VT_API_KEY = envvar("VIRUS_TOTAL", "None")
 # nosec
-MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0")
+MISP_SERVER = envvar("MISP_SERVER", "http://0.0.0.0")
 MISP_TOKEN = envvar("MISP_TOKEN", None)
 MISP_CERT_VERIFY = True if envvar("MISP_VERIF", True) == "True" else False
 GITLAB_CERT_VERIFY = True if envvar("GITLAB_VERIF", str(True)).lower() in ("yes", "y", "true", "1", "t") else False
@@ -273,6 +273,7 @@ class Pusher(Server):
         '''
         try:
             findings = json.loads(findings.value.decode("utf-8"))
+            # nosec
             report_name = findings['input_filename'] if 'input_filename' in findings.keys() else random.randint(4, 10000)
         except Exception as ex:
             LogMessage("Handling report {} failed with {}".format(findings.value.decode("utf-8"), str(ex)), LogMessage.LogTyp.ERROR, SERVICENAME).log()
