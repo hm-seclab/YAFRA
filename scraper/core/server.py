@@ -32,12 +32,15 @@ from libs.kafka.logging import LogMessage
 from libs.kafka.logging import send_health_message
 
 SERVICENAME = envvar("SERVICENAME", "Scraper")
+# nosec
 KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
 SCRAPER_TOPIC_NAME = envvar("SCRAPER_TOPIC", "datascraper")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
+# nosec
 MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0")
 MISP_TOKEN = envvar("MISP_TOKEN", None)
 MISP_CERT_VERIFY = True if envvar("MISP_VERIF", True) == "True" else False
+# nosec
 GITLAB_SERVER = envvar("GITLAB_SERVER", "0.0.0.0:10082")
 GITLAB_TOKEN = envvar("GITLAB_TOKEN", "NOTWORKING")
 GITLAB_REPO_NAME = envvar("GITLAB_REPO_NAME", "IOCFindings")
