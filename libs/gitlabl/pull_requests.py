@@ -6,6 +6,8 @@ import gitlab
 
 from libs.kafka.logging import LogMessage
 from libs.gitlabl.repository import get_projectid_by_name
+from libs.core.environment import envvar
+GITLAB_CERT_VERIFY = True if envvar("GITLAB_VERIF", str(True)).lower() in ("yes", "y", "true", "1", "t") else False
 
 def get_list_of_relevant_prs(gitlabserver, token, repository, servicename):
     '''
@@ -21,7 +23,7 @@ def get_list_of_relevant_prs(gitlabserver, token, repository, servicename):
     '''
     relevant_prs = []
     try:
-        if (gitlab_instance := gitlab.Gitlab(gitlabserver, token)) is not None:
+        if (gitlab_instance := gitlab.Gitlab(gitlabserver, token, ssl_verify=GITLAB_CERT_VERIFY)) is not None:
             if (projectid := get_projectid_by_name(gitlab_instance, repository, servicename)) is not None:
                 gprojects = gitlab_instance.projects.get(projectid)
                 open_prs = gprojects.mergerequests.list(state="opened", labels=['Ready'])

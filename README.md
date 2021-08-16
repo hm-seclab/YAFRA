@@ -1,5 +1,9 @@
 # YAFRA
 
+
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) [![Open Source Love png1](https://badges.frapsoft.com/os/v1/open-source.png?v=103)](https://github.com/ellerbrock/open-source-badges/)
+
+
 YAFRA stands for `[y]et [a]nother [f]ramework for [r]eport [a]nalysis `
 
 ## Description
@@ -7,35 +11,6 @@ YAFRA stands for `[y]et [a]nother [f]ramework for [r]eport [a]nalysis `
 <p align="justify">
 YAFRA is a semi-automated framework for analysing and representing reports about IT security incidents. Users can provide reports as PDF and YAFRA will extract IOCs (indicators of compromise). After extraction these IOCs will be enriched by external sources such as VirusTotal or MITRE in order to provide more context.
 </p>
-
-## Requirements
-
-### Technical
-
-* Docker
-* Docker-compose
-* Make
-* GitLab
-* Kroki Server
-* MISP
-
-` Notice: MISP and GitLab will not be installed via docker-compose. GitLab also needs an active Kroki or PlantUML-Server.`
-
-You can use the kroki Docker-Container provide in the make file by running the following command:
-
-> make krokiinit
-
-This will open a port on the host-machine at 7777.
-
-> Kroki: https://docs.gitlab.com/ee/administration/integration/kroki.html
-
-> PlantUML: https://docs.gitlab.com/ee/administration/integration/plantuml.html
-
-` Notice: The address have to be put into gitlab by an admin. `
-
-### Non-Technical/External-sources:
-
-* VirusTotal-API-Key
 
 ## Installation and Configuration
 
@@ -49,13 +24,3 @@ Example reports can be found on the website of the US-CERT (CISA): https://us-ce
 
 YAFRA provides a simple to use extension system called YAFRA-Extensions. For more information, have a look at the extensions folder.
 
-## System architecture
-
-![Alt-Text](/assets/arch/Arch3.0_TECH.png)
-
-### Meaning
-
-- Blue clouds are Microservices
-- Green arrows are data to kafka
-- Purple arrows are data from kafka
-- Orange arrows are data without kafka interaction

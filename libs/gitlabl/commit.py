@@ -7,6 +7,8 @@ import gitlab
 from libs.kafka.logging import LogMessage
 from libs.gitlabl.repository import get_branch_name
 from libs.gitlabl.repository import get_projectid_by_name
+from libs.core.environment import envvar
+GITLAB_CERT_VERIFY = True if envvar("GITLAB_VERIF", str(True)).lower() in ("yes", "y", "true", "1", "t") else False
 
 def file_applies_rules(file, servicename): #TODO REFACTOR and integrate
     '''DEPRECATED
@@ -38,7 +40,7 @@ def get_filename_since_last_timestamp(gitlabserver, token, repository, timestamp
     forbidden_files = 'README.md'
     branch_name = get_branch_name()
     try:
-        if (gitlab_instance := gitlab.Gitlab(gitlabserver, token)) is not None:
+        if (gitlab_instance := gitlab.Gitlab(gitlabserver, token, ssl_verify=GITLAB_CERT_VERIFY)) is not None:
             if (projectid := get_projectid_by_name(gitlab_instance, repository, servicename)) is not None:
                 gprojects = gitlab_instance.projects.get(projectid)
                 commits = gprojects.commits.list(ref_name=branch_name, since=timestamp)
@@ -50,7 +52,7 @@ def get_filename_since_last_timestamp(gitlabserver, token, repository, timestamp
                                     filenames.append(file['new_path'])
         filenames = list(filter(lambda name: name not in forbidden_files, filenames))
     except Exception as error:
-        LogMessage(str(error)+"st", LogMessage.LogTyp.ERROR, servicename).log()
+        LogMessage(str(error), LogMessage.LogTyp.ERROR, servicename).log()
     return filenames
 
 def get_latest_commit_hash_by_branch(gitlabserver, token, repository, branch, servicename):
@@ -66,7 +68,7 @@ def get_latest_commit_hash_by_branch(gitlabserver, token, repository, branch, se
     '''
     chash = None
     try:
-        if (gitlab_instance := gitlab.Gitlab(gitlabserver, token)) is not None:
+        if (gitlab_instance := gitlab.Gitlab(gitlabserver, token, ssl_verify=GITLAB_CERT_VERIFY)) is not None:
             if (projectid := get_projectid_by_name(gitlab_instance, repository, servicename)) is not None:
                 gprojects = gitlab_instance.projects.get(projectid)
                 if (commits := gprojects.commits.list(ref_name=branch)) is not None and len(commits) > 0:

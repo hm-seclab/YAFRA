@@ -26,4 +26,9 @@ This will open a port on the host-machine at 7777.
 ### Non-Technical/External-sources:
 
 * VirusTotal-API-Key
+* Twitter-Consumer-Key
+* Twitter-Consumer-Key-Secret
+* Twitter-Access-Token
+* Twitter-Access-Token-Secret
+* Leakix-API-Key
 

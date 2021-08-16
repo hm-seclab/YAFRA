@@ -6,8 +6,9 @@ README.md
 scripts
 .vscode
 .pylintrc
-
+.env_file
 testfiles
+tests_*
 
 # Local Dockerfiles.
 */dockerfile

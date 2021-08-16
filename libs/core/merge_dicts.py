@@ -4,16 +4,17 @@ This script contains function to support merging common python datastructurs.
 
 from libs.kafka.logging import LogMessage
 
+
 def merge_dicts(target, source, servicename):
     '''
-    merge_dicts will take to dicts and merge them into one.
+    merge_dicts will take two dicts and merge them into one.
     @param target will be the first dict and also the final
         one.
     @param source will be the second dict, which gets put
         in to the first.
     @servicename will be the name of the calling service.
     @return a dict which will be the merge of the first and
-        second. Incase of an error the target will be
+        second. In case of an error the target will be
         returned.
     '''
     try:

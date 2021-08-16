@@ -23,6 +23,7 @@ from libs.core.environment import envvar
 
 SERVICENAME = envvar("SERVICENAME", "Systemmanagement and monitoring")
 LOGGING_TOPIC_NAME = envvar("LOGGER_TOPIC", "logging")
+# nosec
 KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health")
 

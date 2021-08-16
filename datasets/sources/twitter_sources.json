@@ -1,0 +1,33 @@
+{
+  "twitter_sources": [
+    "@circl_lu",
+    "@AlienVault",
+    "@CrowdStrike",
+    "@DomainTools",
+    "@hyasinc",
+    "@Intel471Inc",
+    "@MISPProject",
+    "@LuatixHQ",
+    "@recordedfuture",
+    "@passivetotal",
+    "@shodanhq",
+    "@ThreatConnect",
+    "@threatminer",
+    "@VirusTotal",
+    "@FireEye",
+    "@silv0123",
+    "@bad_packets",
+    "@malware_traffic",
+    "@abuse_ch",
+    "@executemalware",
+    "@Cryptolaemus1",
+    "@FewAtoms",
+    "@ffforward",
+    "@Racco42",
+    "@James_inthe_box",
+    "@JAMESWT_MHT",
+    "@mojoesec",
+    "@TheHive_Project",
+    "@sansforensics"
+  ]
+}

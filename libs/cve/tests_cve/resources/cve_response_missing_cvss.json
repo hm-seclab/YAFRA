@@ -1,0 +1,115 @@
+{
+  "Modified": "2020-01-16T18:15:00",
+  "Published": "2020-01-14T23:15:00",
+  "access": {
+    "authentication": "NONE",
+    "complexity": "MEDIUM",
+    "vector": "NETWORK"
+  },
+  "assigner": "cve@mitre.org",
+  "capec": [
+    {
+      "id": "459",
+      "name": "Creating a Rogue Certification Authority Certificate",
+      "prerequisites": "Certification Authority is using the MD5 hash function to generate the certificate hash to be signed",
+      "related_weakness": [
+        "290",
+        "295",
+        "327"
+      ],
+      "solutions": "Certification Authorities need to stop using the weak collision prone MD5 hashing algorithm to hash the certificates that they are about to sign. Instead they should be using stronger hashing functions such as SHA-256 or SHA-512.",
+      "summary": "An adversary exploits a weakness in the MD5 hash algorithm (weak collision resistance) to generate a certificate signing request (CSR) that contains collision blocks in the \"to be signed\" part. The adversary specially crafts two different, but valid X.509 certificates that when hashed with the MD5 algorithm would yield the same value. The adversary then sends the CSR for one of the certificates to the Certification Authority which uses the MD5 hashing algorithm. That request is completely valid and the Certificate Authority issues an X.509 certificate to the adversary which is signed with its private key. An adversary then takes that signed blob and inserts it into another X.509 certificate that the attacker generated. Due to the MD5 collision, both certificates, though different, hash to the same value and so the signed blob works just as well in the second certificate. The net effect is that the adversary's second X.509 certificate, which the Certification Authority has never seen, is now signed and validated by that Certification Authority. To make the attack more interesting, the second certificate could be not just a regular certificate, but rather itself a signing certificate. Thus the adversary is able to start their own Certification Authority that is anchored in its root of trust in the legitimate Certification Authority that has signed the attackers' first X.509 certificate. If the original Certificate Authority was accepted by default by browsers, so will now the Certificate Authority set up by the adversary and of course any certificates that it signs. So the adversary is now able to generate any SSL certificates to impersonate any web server, and the user's browser will not issue any warning to the victim. This can be used to compromise HTTPS communications and other types of systems where PKI and X.509 certificates may be used (e.g., VPN, IPSec)."
+    }
+  ],
+  "cvss-time": "2020-01-16T18:15:00",
+  "cvss-vector": "AV:N/AC:M/Au:N/C:P/I:P/A:N",
+  "cwe": "CWE-295",
+  "id": "CVE-2020-0601",
+  "impact": {
+    "availability": "NONE",
+    "confidentiality": "PARTIAL",
+    "integrity": "PARTIAL"
+  },
+  "last-modified": "2020-01-16T18:15:00",
+  "references": [
+    "http://packetstormsecurity.com/files/155960/CurveBall-Microsoft-Windows-CryptoAPI-Spoofing-Proof-Of-Concept.html",
+    "http://packetstormsecurity.com/files/155961/CurveBall-Microsoft-Windows-CryptoAPI-Spoofing-Proof-Of-Concept.html",
+    "https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/CVE-2020-0601"
+  ],
+  "refmap": {
+    "misc": [
+      "http://packetstormsecurity.com/files/155960/CurveBall-Microsoft-Windows-CryptoAPI-Spoofing-Proof-Of-Concept.html",
+      "http://packetstormsecurity.com/files/155961/CurveBall-Microsoft-Windows-CryptoAPI-Spoofing-Proof-Of-Concept.html",
+      "https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/CVE-2020-0601"
+    ],
+    "exploit-db": [
+      "11030"
+    ]
+  },
+  "summary": "A spoofing vulnerability exists in the way Windows CryptoAPI (Crypt32.dll) validates Elliptic Curve Cryptography (ECC) certificates.An attacker could exploit the vulnerability by using a spoofed code-signing certificate to sign a malicious executable, making it appear the file was from a trusted, legitimate source, aka 'Windows CryptoAPI Spoofing Vulnerability'.",
+  "vulnerable_configuration": [
+    {
+      "id": "cpe:2.3:o:microsoft:windows_10:-:*:*:*:*:*:*:*",
+      "title": "cpe:2.3:o:microsoft:windows_10:-:*:*:*:*:*:*:*"
+    },
+    {
+      "id": "cpe:2.3:o:microsoft:windows_10:1607:*:*:*:*:*:*:*",
+      "title": "cpe:2.3:o:microsoft:windows_10:1607:*:*:*:*:*:*:*"
+    },
+    {
+      "id": "cpe:2.3:o:microsoft:windows_10:1709:*:*:*:*:*:*:*",
+      "title": "cpe:2.3:o:microsoft:windows_10:1709:*:*:*:*:*:*:*"
+    },
+    {
+      "id": "cpe:2.3:o:microsoft:windows_10:1803:*:*:*:*:*:*:*",
+      "title": "cpe:2.3:o:microsoft:windows_10:1803:*:*:*:*:*:*:*"
+    },
+    {
+      "id": "cpe:2.3:o:microsoft:windows_10:1809:*:*:*:*:*:*:*",
+      "title": "cpe:2.3:o:microsoft:windows_10:1809:*:*:*:*:*:*:*"
+    },
+    {
+      "id": "cpe:2.3:o:microsoft:windows_10:1903:*:*:*:*:*:*:*",
+      "title": "cpe:2.3:o:microsoft:windows_10:1903:*:*:*:*:*:*:*"
+    },
+    {
+      "id": "cpe:2.3:o:microsoft:windows_10:1909:*:*:*:*:*:*:*",
+      "title": "cpe:2.3:o:microsoft:windows_10:1909:*:*:*:*:*:*:*"
+    },
+    {
+      "id": "cpe:2.3:o:microsoft:windows_server_2016:-:*:*:*:*:*:*:*",
+      "title": "cpe:2.3:o:microsoft:windows_server_2016:-:*:*:*:*:*:*:*"
+    },
+    {
+      "id": "cpe:2.3:o:microsoft:windows_server_2016:1803:*:*:*:*:*:*:*",
+      "title": "cpe:2.3:o:microsoft:windows_server_2016:1803:*:*:*:*:*:*:*"
+    },
+    {
+      "id": "cpe:2.3:o:microsoft:windows_server_2016:1903:*:*:*:*:*:*:*",
+      "title": "cpe:2.3:o:microsoft:windows_server_2016:1903:*:*:*:*:*:*:*"
+    },
+    {
+      "id": "cpe:2.3:o:microsoft:windows_server_2016:1909:*:*:*:*:*:*:*",
+      "title": "cpe:2.3:o:microsoft:windows_server_2016:1909:*:*:*:*:*:*:*"
+    },
+    {
+      "id": "cpe:2.3:o:microsoft:windows_server_2019:-:*:*:*:*:*:*:*",
+      "title": "cpe:2.3:o:microsoft:windows_server_2019:-:*:*:*:*:*:*:*"
+    }
+  ],
+  "vulnerable_configuration_cpe_2_2": [],
+  "vulnerable_product": [
+    "cpe:2.3:o:microsoft:windows_10:-:*:*:*:*:*:*:*",
+    "cpe:2.3:o:microsoft:windows_10:1607:*:*:*:*:*:*:*",
+    "cpe:2.3:o:microsoft:windows_10:1709:*:*:*:*:*:*:*",
+    "cpe:2.3:o:microsoft:windows_10:1803:*:*:*:*:*:*:*",
+    "cpe:2.3:o:microsoft:windows_10:1809:*:*:*:*:*:*:*",
+    "cpe:2.3:o:microsoft:windows_10:1903:*:*:*:*:*:*:*",
+    "cpe:2.3:o:microsoft:windows_10:1909:*:*:*:*:*:*:*",
+    "cpe:2.3:o:microsoft:windows_server_2016:-:*:*:*:*:*:*:*",
+    "cpe:2.3:o:microsoft:windows_server_2016:1803:*:*:*:*:*:*:*",
+    "cpe:2.3:o:microsoft:windows_server_2016:1903:*:*:*:*:*:*:*",
+    "cpe:2.3:o:microsoft:windows_server_2016:1909:*:*:*:*:*:*:*",
+    "cpe:2.3:o:microsoft:windows_server_2019:-:*:*:*:*:*:*:*"
+  ]
+}

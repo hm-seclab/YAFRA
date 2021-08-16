@@ -5,8 +5,11 @@ This class will represent the iocpusher-server.
 # pylint: disable=C0413, C0411
 
 import sys
+import time
 import json
+import datetime
 import random
+import requests
 import pytz
 import gitlab
 sys.path.append('..')
@@ -44,15 +47,18 @@ from flask_apscheduler import APScheduler
 # ENVIRONMENT-VARS
 SERVICENAME = envvar("SERVICENAME", "Pusher")
 IOC_TOPIC_NAME = envvar("IOC_TOPIC", "ioc")
+# nosec
 KAFKA_SERVER = envvar("KAFKA_SERVER", "0.0.0.0:9092")
 HEALTHTOPIC = envvar("HEALTH_TOPIC", "health_report")
+# nosec
 GITLAB_SERVER = envvar("GITLAB_SERVER", "http://0.0.0.0:10082")
 GITLAB_TOKEN = envvar("GITLAB_TOKEN", "NOTWORKING")
 GITLAB_REPO_NAME = envvar("GITLAB_REPO_NAME", "IOCFindings")
 VT_API_KEY = envvar("VIRUS_TOTAL", "None")
-MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0")
+MISP_SERVER = envvar("MISP_SERVER", "0.0.0.0") #nosec
 MISP_TOKEN = envvar("MISP_TOKEN", None)
 MISP_CERT_VERIFY = True if envvar("MISP_VERIF", True) == "True" else False
+GITLAB_CERT_VERIFY = True if envvar("GITLAB_VERIF", str(True)).lower() in ("yes", "y", "true", "1", "t") else False
 
 class Config:
     '''
@@ -80,7 +86,25 @@ class Pusher(Server):
         and push it to gitlab.
     '''
 
+    @staticmethod
+    def get_repository_handle(): #TODO move to lib
+        '''
+
+        '''
+        try:
+            gitlab_instance = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN, ssl_verify=GITLAB_CERT_VERIFY)
+            projectid = get_projectid_by_name(gitlab_instance, GITLAB_REPO_NAME, SERVICENAME)
+            gprojects = gitlab_instance.projects.get(projectid)
+            return gprojects
+        except Exception as error:
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            return None
+
     EXTENSIONS = list(filter(lambda ext: ext.in_report(), load_extensions(SERVICENAME)))
+    PUSHER_THREAD = None
+    BACKOFF_TIMER = 5
+    TIME_SINCE_EXCEPTION = None
+    GPROJECT = None
 
     @staticmethod
     def add_misp_appearance(findings, improved_findings):
@@ -128,17 +152,18 @@ class Pusher(Server):
         @return a dict with more data about the finding.s
         '''
         improved_findings = {}
+        finding_keys = findings.keys() if findings is not None else {}
         try:
             cve_details, ipv4_details, domains_details, m_e_tactics, m_e_techniques = {}, {}, {}, {}, {}
-            if (cves := findings['cves']) is not None and len(cves) > 0:
+            if 'cves' in finding_keys and (cves := findings['cves']) is not None and len(cves) > 0:
                 cve_details = get_cve_information(cves, SERVICENAME)
-            if (ipv4s := findings['ipv4s']) is not None and len(ipv4s) > 0:
+            if 'ipv4s' in finding_keys and (ipv4s := findings['ipv4s']) is not None and len(ipv4s) > 0:
                 ipv4_details = get_vt_information_ipv4(VT_API_KEY, ipv4s, SERVICENAME)
-            if (domains := findings['domains']) is not None and len(domains) > 0:
+            if 'domains' in finding_keys and (domains := findings['domains']) is not None and len(domains) > 0:
                 domains_details = get_vt_information_domains(VT_API_KEY, domains, SERVICENAME)
-            if (mitre_attack_tac_ent := findings['attack_tactics']['enterprise']) is not None and len(mitre_attack_tac_ent) > 0:
+            if 'attack_tactics' in finding_keys and (mitre_attack_tac_ent := findings['attack_tactics']['enterprise']) is not None and len(mitre_attack_tac_ent) > 0:
                 m_e_tactics = get_mitre_information_tactics_enterpise(mitre_attack_tac_ent, SERVICENAME)
-            if (mitre_attack_tech_ent := findings['attack_techniques']['enterprise']) is not None and len(mitre_attack_tech_ent) > 0:
+            if 'attack_techniques' in finding_keys and (mitre_attack_tech_ent := findings['attack_techniques']['enterprise']) is not None and len(mitre_attack_tech_ent) > 0:
                 m_e_techniques = get_mitre_information_techniques_enterpise(mitre_attack_tech_ent, SERVICENAME)
             improved_findings = {
                 "cve": cve_details,
@@ -195,7 +220,7 @@ class Pusher(Server):
         '''
         data = {}
         try:
-            markdown, mitre_files, im_fin = Pusher.generate_markdown(findings)
+            markdown, mitre_files, _ = Pusher.generate_markdown(findings)
             data = {
                 'branch': report_name,
                 'commit_message': 'Commited a report: {}'.format(report_name),
@@ -234,6 +259,7 @@ class Pusher(Server):
         '''
         try:
             create_monthly_if_not_exists(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, servicename=SERVICENAME)
+            LogMessage("A new monthly branch has been created.", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
@@ -246,23 +272,29 @@ class Pusher(Server):
         '''
         try:
             findings = json.loads(findings.value.decode("utf-8"))
-            report_name = findings['input_filename'] if 'input_filename' in findings.keys() else random.randint(4, 10000)
-            gitlab_instance = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN)
-            projectid = get_projectid_by_name(gitlab_instance, GITLAB_REPO_NAME, SERVICENAME)
-            gprojects = gitlab_instance.projects.get(projectid)
-            gprojects.branches.create({'branch': report_name, 'ref': get_branch_name()})
+            report_name = findings['input_filename'] if 'input_filename' in findings.keys() else random.randint(4, 10000) # nosec
+        except Exception as ex:
+            LogMessage("Handling report {} failed with {}".format(findings.value.decode("utf-8"), str(ex)), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            return
+        try:
+            Pusher.GPROJECT.branches.create({'branch': report_name, 'ref': get_branch_name()})
             data = Pusher.create_markdown(findings, report_name)
-            commit = gprojects.commits.create(data)
-            create_issues(  gitlabserver=GITLAB_SERVER,
-                            token=GITLAB_TOKEN,
-                            repository=GITLAB_REPO_NAME,
-                            servicename=SERVICENAME,
-                            title=report_name,
-                            description="A report has been submitted. The name of the branch is: {}.".format(report_name))
+            _ = Pusher.GPROJECT.commits.create(data)
+            create_issues(Pusher.GPROJECT, servicename=SERVICENAME, title=report_name, description="A report has been submitted. The name of the branch is: {}.".format(report_name))
         except gitlab.gitlab.GitlabCreateError as gc_error:
-            LogMessage(str(gc_error), LogMessage.LogTyp.INFO, SERVICENAME).log()
+            LogMessage(f"{report_name}: {str(gc_error)}", LogMessage.LogTyp.ERROR, SERVICENAME).log() 
+            #GitLab is in her. SWITCH between 400 and 500 and 502
+        except requests.exceptions.ConnectionError as error:
+            Pusher.BACKOFF_TIMER += 120
+            Pusher.TIME_SINCE_EXCEPTION = datetime.datetime.now()
+            Pusher.GPROJECT = Pusher.get_repository_handle()
+            time.sleep(Pusher.BACKOFF_TIMER)
+            Pusher.submit_report(findings)
+            LogMessage(f"{report_name}: {str(error)}", LogMessage.LogTyp.ERROR, SERVICENAME).log()
         except Exception as error:
-            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+            Pusher.BACKOFF_TIMER += 15
+            Pusher.TIME_SINCE_EXCEPTION = datetime.datetime.now()
+            LogMessage(f"{report_name}: {str(error)}", LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
     @staticmethod
     def consume_findings():
@@ -273,7 +305,45 @@ class Pusher(Server):
         try:
             consumer = KafkaConsumer(IOC_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, client_id='ioc_pusher', api_version=(2, 7, 0),)
             for report in consumer:
+                time.sleep(Pusher.BACKOFF_TIMER)
                 Thread(target=Pusher.submit_report, args=(report,), daemon=True).start()
+        except Exception as error:
+            if 'response_code' in dir(error) and (error.response_code == 500 or error.response_code == 502):
+                Pusher.GPROJECT = Pusher.get_repository_handle()
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+
+    @staticmethod
+    @scheduler.task("interval", id="clear_timer", minutes=2, timezone=pytz.UTC)
+    def clear_backoff_timer():
+        '''
+        clear_backoff_timer will check the last time a exception occurred.
+            In case it is more than 5 minutes it will clear the timer and
+            set it back to 5 seconds.
+        '''
+        difference = 0
+        try:
+            current_time = datetime.datetime.now()
+            if Pusher.TIME_SINCE_EXCEPTION is not None:
+                difference = current_time - Pusher.TIME_SINCE_EXCEPTION
+                difference = difference.seconds // 60 % 60
+            if Pusher.BACKOFF_TIMER > 5 and difference >= 5:
+                LogMessage("Reseting the backoff time for the pusher", LogMessage.LogTyp.ERROR, SERVICENAME).log()
+                Pusher.BACKOFF_TIMER = 5
+        except Exception as error:
+            LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
+
+    @staticmethod
+    @scheduler.task("interval", id="health_push", minutes=2, timezone=pytz.UTC)
+    def recover_pusher_thread():
+        '''
+        recover_pusher_thread will check every 2 minutes whether the pusher thread is still alive or not.
+            In Case it is not a new thread will be created and started.
+        '''
+        try:
+            if Pusher.PUSHER_THREAD is None or not Pusher.PUSHER_THREAD.is_alive():
+                Pusher.PUSHER_THREAD = Thread(target=Pusher.consume_findings, daemon=True)
+                Pusher.PUSHER_THREAD.start()
+                LogMessage("Recovering the pusher thread", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
 
@@ -284,7 +354,9 @@ class Pusher(Server):
         attack = Attck(nested_subtechniques=False)
         attack.update()
         create_repository_if_not_exists(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, servicename=SERVICENAME)
-        Thread(target=Pusher.consume_findings, daemon=True).start()
+        Pusher.PUSHER_THREAD = Thread(target=Pusher.consume_findings, daemon=True)
+        Pusher.PUSHER_THREAD.start()
+        Pusher.GPROJECT = Pusher.get_repository_handle()
         Pusher.create_monthly_branch()
         scheduler.start()
         return Server.__call__(self, app, *args, **kwargs)

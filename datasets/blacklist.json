@@ -106,7 +106,10 @@
         "www.yahoo.com",
         "www.ic3.gov",
         "publicintelligence.net",
-        "rss_feed1_from_publicintelligence.net"
+        "rss_feed1_from_publicintelligence.net",
+        "www.ncsc.gov.uk",
+        "t.co",
+        "shodan.io"
     ],
     "mimetypes": [], 
     "githubrepos": [], 
@@ -162,7 +165,8 @@
         "info@fireeye.com",
         "us-cert@dhs.sgov.gov",
         "us-cert@dhs.ic.gov",
-        "intelreports@kaspersky.com"
+        "intelreports@kaspersky.com",
+        "support@shodan.io"
     ], 
     "ipv4_cidrs": [], 
     "imphashes": [], 

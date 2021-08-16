@@ -2,38 +2,45 @@ version: "3.4"
 x-common-variables: &common-variables
     LOGGER_TOPIC: "logging"
     HEALTH_TOPIC: "health_report"
+    SCRAPER_TOPIC: "datascraper"
     IOC_TOPIC: "ioc"
     REPORT_TOPIC: "rfreport"
-    KAFKA_SERVER: "${YOUR_IP}:9092"
+    KAFKA_SERVER: kafka:9092
     SYS_VERSION: "0.1.1"
     PYTHONUNBUFFERED: 1
-x-common-variables: &GITLAB
-    GITLAB_SERVER: "http://${YOUR_IP}:10080"
-    GITLAB_TOKEN: "${YOUR_GITLAB_TOKEN}"
-    GITLAB_REPO_NAME: "${YOUR_REPONAME}"
-x-common-variables: &APIKEYS
-    VIRUS_TOTAL: "${YOUR_VT_TOKEN}"
-x-common-variables: &MISP
-    MISP_SERVER: "https://${YOUR_IP}:443"
-    MISP_TOKEN: "${YOUR_MISP_TOKEN}"
+x-gitlab: &GITLAB
+    GITLAB_SERVER: ${GITLAB_BASEURL}
+    GITLAB_TOKEN: ${YOUR_GITLAB_TOKEN}
+    GITLAB_REPO_NAME: ${YOUR_REPONAME}
+    GITLAB_VERIF: "False"
+x-apikeys: &APIKEYS
+    VIRUS_TOTAL: ${YOUR_VT_TOKEN}
+    LEAKIX: ${LEAKIX_API_KEY}
+x-misp: &MISP
+    MISP_SERVER: ${MISP_BASEURL}
+    MISP_TOKEN: ${YOUR_MISP_TOKEN}
     MISP_VERIF: "False"
-x-common-variables: &NEO4J
+x-neo4j: &NEO4J
     NEO_SERVER: "http://${YOUR_IP}:7474"
     NEO_USER: "neo4j"
-    NEO_PASSWORD: "${YOUR_PASSWORD}"
+    NEO_PASSWORD: ${YOUR_PASSWORD}
+x-twitter: &TWITTER
+    TWEET_COUNT: ${TWEET_COUNT}
+    TWITTER_CONSUMER_KEY: ${TWITTER_CONSUMER_KEY}
+    TWITTER_CONSUMER_KEY_SECRET: ${TWITTER_CONSUMER_KEY_SECRET}
+    TWITTER_ACCESS_TOKEN: ${TWITTER_ACCESS_TOKEN}
+    TWITTER_ACCESS_TOKEN_SECRET: ${TWITTER_ACCESS_TOKEN_SECRET}
 services:
     zookeeper:
         image: wurstmeister/zookeeper
         container_name: zookeeper
-        ports: 
-            - "2181:2181"
     kafka:
         image: wurstmeister/kafka
         container_name: kafka
-        ports:
-            - "9092:9092"
+        depends_on: 
+            - zookeeper
         environment: 
-            KAFKA_ADVERTISED_HOST_NAME: ${YOUR_IP}
+            KAFKA_ADVERTISED_HOST_NAME: kafka
             KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     sysmon:
         build:
@@ -58,17 +65,6 @@ services:
             <<: *common-variables
             <<: *GITLAB
             SERVICENAME: "Extractor"
-    analyser:
-        build:
-            context: .
-            dockerfile: analyser/Dockerfile
-        container_name: analyser
-        ports:
-            - "8085:8085"
-        environment: 
-            <<: *common-variables
-            <<: *MISP
-            SERVICENAME: "Analyser"
     scraper:
         build:
             context: .
@@ -78,6 +74,10 @@ services:
             - "8086:8086"
         environment: 
             <<: *common-variables
+            <<: *APIKEYS
+            <<: *TWITTER
+            <<: *MISP
+            <<: *GITLAB
             SERVICENAME: "Scraper"
     pusher:
         build:
@@ -132,3 +132,7 @@ services:
             - NEO4J_dbms_memory_pagecache_size=1G
             - NEO4J_dbms.memory.heap.initial_size=1G
             - NEO4J_dbms_memory_heap_max__size=1G
+    kroki:
+        image: yuzutech/kroki
+        ports:
+            - "7777:8000"

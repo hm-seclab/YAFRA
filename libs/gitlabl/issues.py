@@ -5,7 +5,7 @@ This script contains function to handle issues in gitlab.
 from libs.kafka.logging import LogMessage
 from libs.gitlabl.repository import get_project_handle
 
-def create_issues(gitlabserver, token, repository, servicename, title, description):
+def create_issues(gprojects, servicename, title, description):
     '''
     create_issues will create an issues for a submitted report.
     @param gitlabserver will be the address of the gitlab entdpoint.
@@ -16,7 +16,6 @@ def create_issues(gitlabserver, token, repository, servicename, title, descripti
     @param description will be the text of the issue.
     '''
     try:
-        gprojects = get_project_handle(gitlabserver, token, repository, servicename)
         issue = gprojects.issues.create({'title': title, 'description': description})
         issue.labels = ['New Report']
         issue.todo()

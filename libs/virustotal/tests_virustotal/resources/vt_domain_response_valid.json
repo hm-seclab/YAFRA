@@ -1,0 +1,87 @@
+{
+  "undetected_referrer_samples": [
+    {
+      "date": "2018-03-04 16:38:06",
+      "positives": 0,
+      "total": 66,
+      "sha256": "ce08cf22949b6b6fcd4e61854ce810a4f9ee04529340dd077fa354d759dc7a95"
+    },
+    {
+      "positives": 0,
+      "total": 53,
+      "sha256": "b8f5db667431d02291eeec61cf9f0c3d7af00798d0c2d676fde0efb0cedb7741"
+    }
+  ],
+  "whois_timestamp": 1520586501,
+  "detected_downloaded_samples": [
+    {
+      "date": "2013-06-20 18:51:30",
+      "positives": 2,
+      "total": 46,
+      "sha256": "cd8553d9b24574467f381d13c7e0e1eb1e58d677b9484bd05b9c690377813e54"
+    }
+  ],
+  "detected_referrer_samples": [],
+  "undetected_downloaded_samples": [
+    {
+      "date": "2018-01-14 22:34:24",
+      "positives": 0,
+      "total": 70,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "resolutions": [
+    {
+      "last_resolved": "2018-03-09 00:00:00",
+      "ip_address": "185.53.177.31"
+    },
+    {
+      "last_resolved": "2013-06-20 00:00:00",
+      "ip_address": "90.156.201.97"
+    }
+  ],
+  "subdomains": [
+    "test.027.ru",
+    "www.027.ru"
+  ],
+  "categories": [
+    "parked",
+    "uncategorized"
+  ],
+  "domain_siblings": [],
+  "undetected_urls": [],
+  "response_code": 1,
+  "verbose_msg": "Domain found in dataset",
+  "detected_urls": [
+    {
+      "url": "http://027.ru/",
+      "positives": 2,
+      "total": 67,
+      "scan_date": "2018-04-01 15:51:22"
+    },
+    {
+      "url": "http://027.ru/adobe/flash_install_v10x1.php",
+      "positives": 5,
+      "total": 67,
+      "scan_date": "2018-03-26 09:22:43"
+    },
+    {
+      "url": "http://027.ru/track.php",
+      "positives": 4,
+      "total": 66,
+      "scan_date": "2018-01-14 22:39:41"
+    },
+    {
+      "url": "http://027.ru/track.php?domain=027.ru&caf=1&toggle=answercheck",
+      "positives": 2,
+      "total": 66,
+      "scan_date": "2018-01-09 22:19:43"
+    },
+    {
+      "url": "https://027.ru/",
+      "positives": 1,
+      "total": 66,
+      "scan_date": "2016-02-08 13:25:40"
+    }
+  ]
+}

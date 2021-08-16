@@ -11,8 +11,8 @@ from collections import Counter
 from mdutils.mdutils import MdUtils
 
 from libs.kafka.logging import LogMessage
-from libs.countrycodes.iso_hanlder import convert_alpha_2_to_alpha_3
-from libs.countrycodes.iso_hanlder import convert_alpha_2_to_qualified_name
+from libs.countrycodes.iso_handler import convert_alpha_2_to_alpha_3
+from libs.countrycodes.iso_handler import convert_alpha_2_to_qualified_name
 
 from .gl_structure import BAR_WEBSITE_TYPES_SCHEMA
 from .gl_structure import CVE_HEATMAP
@@ -651,6 +651,9 @@ def generate_overview_section(markdownfile, findings, filename, extensionnames, 
             "This report contain the information about the warning from **{}**.".format(filename)
         )
         generate_overview_table(markdownfile, findings, extensionnames, servicename)
+        if 'textsummary' in findings.keys() and (textsum := findings['textsummary']) is not None and len(textsum) > 0:
+            markdownfile.new_header(level=2, title='Summary')
+            markdownfile.new_paragraph(textsum)
         if 'ipv4' in findings.keys() and (ipv4adds := findings['ipv4']) is not None and len(ipv4adds) > 0:
             markdownfile.new_header(level=2, title='Involved states')
             markdownfile.new_paragraph("The graph below shows all countrys involved in the incident (Based on the active ips).")

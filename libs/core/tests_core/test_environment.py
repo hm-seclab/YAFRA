@@ -6,7 +6,7 @@ import os
 
 from unittest import TestCase, mock
 
-from environment import envvar
+from libs.core.environment import envvar
 
 class EnvironmentTests(TestCase):
     '''
