@@ -1,6 +1,6 @@
 Name: APT
 Field: apt_ids
-Pattern: ([G]{1}([0-9]{4}))
+Pattern: (((G){1}([0-9]{4}))|((APT){1}([0-9]{1,3})))
 PatternArgs: 0
 Summary: Find advanced persistent threat ids in a report.
 Status: enabled

@@ -45,6 +45,8 @@ from libs.kafka.logging import send_health_message
 from libs.extensions.loader import load_extensions
 from libs.gitlabl.files import read_file_from_gitlab
 from libs.gitlabl.sanitize_title import sanitize_title
+from libs.text_summarization.tsummarization import summarize
+
 import traceback
 # ENVIRONMENT-VARS
 SERVICENAME = envvar("SERVICENAME", "Extractor")
@@ -176,8 +178,11 @@ class Extractor(Server):
         iocs = {}
         try:
             iocs = find_iocs(pdftext)
+            urls = [rule for rule in ioce.extract_urls(pdftext, refang=True)]
+            iocs['urls'] = list(dict.fromkeys(urls))
             yara_rules = [rule for rule in ioce.extract_yara_rules(pdftext)]
             iocs['yara_rules'] = yara_rules
+            if len(pdftext) > 2500: iocs['textsummary'] = summarize(pdftext, SERVICENAME)
             ex_ioc = Extractor.extensions(pdftext)
             iocs = merge_dicts(iocs, filter_dict_values(ex_ioc, SERVICENAME), SERVICENAME)
             iocs = filter_by_blacklist(iocs, Extractor.BLACKLIST, SERVICENAME)

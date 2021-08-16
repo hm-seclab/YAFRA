@@ -339,7 +339,8 @@ class Pusher(Server):
         '''
         try:
             if Pusher.PUSHER_THREAD is None or not Pusher.PUSHER_THREAD.is_alive():
-                Pusher.PUSHER_THREAD = Thread(target=Pusher.consume_findings, daemon=True).start()
+                Pusher.PUSHER_THREAD = Thread(target=Pusher.consume_findings, daemon=True)
+                Pusher.PUSHER_THREAD.start()
                 LogMessage("Recovering the pusher thread", LogMessage.LogTyp.INFO, SERVICENAME).log()
         except Exception as error:
             LogMessage(str(error), LogMessage.LogTyp.ERROR, SERVICENAME).log()
@@ -351,7 +352,8 @@ class Pusher(Server):
         attack = Attck(nested_subtechniques=False)
         attack.update()
         create_repository_if_not_exists(gitlabserver=GITLAB_SERVER, token=GITLAB_TOKEN, repository=GITLAB_REPO_NAME, servicename=SERVICENAME)
-        Pusher.PUSHER_THREAD = Thread(target=Pusher.consume_findings, daemon=True).start()
+        Pusher.PUSHER_THREAD = Thread(target=Pusher.consume_findings, daemon=True)
+        Pusher.PUSHER_THREAD.start()
         Pusher.GPROJECT = Pusher.get_repository_handle()
         Pusher.create_monthly_branch()
         scheduler.start()
