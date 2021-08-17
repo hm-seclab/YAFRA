@@ -5,7 +5,6 @@ This class will represent the reporter-server.
 # pylint: disable=C0413, C0411
 import os
 import sys
-import datetime
 import json
 
 import pytz
