@@ -1,0 +1,56 @@
+[
+  {
+    "Modified": "2021-08-17T11:53:00",
+    "Published": "2021-08-16T22:15:00",
+    "access": {},
+    "assigner": "secure@dell.com",
+    "cvss": "None",
+    "cwe": "Unknown",
+    "id": "CVE-2021-21568",
+    "impact": {},
+    "last-modified": "2021-08-17T11:53:00",
+    "references": [
+      "https://www.dell.com/support/kbdoc/000190408"
+    ],
+    "summary": "Dell EMC PowerScale OneFS versions 8.2.x - 9.2.x contain an insufficient logging vulnerability. An authenticated user with ISI_PRIV_LOGIN_PAPI could make un-audited and un-trackable configuration changes to settings that their roles have privileges to change.",
+    "vulnerable_configuration": [],
+    "vulnerable_configuration_cpe_2_2": [],
+    "vulnerable_product": []
+  },
+  {
+    "Modified": "2021-08-17T11:53:00",
+    "Published": "2021-08-16T22:15:00",
+    "access": {},
+    "assigner": "secure@dell.com",
+    "cvss": "None",
+    "cwe": "Unknown",
+    "id": "CVE-2021-21592",
+    "impact": {},
+    "last-modified": "2021-08-17T11:53:00",
+    "references": [
+      "https://www.dell.com/support/kbdoc/000190408"
+    ],
+    "summary": "Dell EMC PowerScale OneFS versions 8.2.x - 9.2.x improperly handle an exceptional condition. A remote low privileged user could potentially exploit this vulnerability, leading to unauthorized information disclosure.",
+    "vulnerable_configuration": [],
+    "vulnerable_configuration_cpe_2_2": [],
+    "vulnerable_product": []
+  },
+  {
+    "Modified": "2021-08-17T11:53:00",
+    "Published": "2021-08-16T22:15:00",
+    "access": {},
+    "assigner": "secure@dell.com",
+    "cvss": "None",
+    "cwe": "Unknown",
+    "id": "CVE-2021-21594",
+    "impact": {},
+    "last-modified": "2021-08-17T11:53:00",
+    "references": [
+      "https://www.dell.com/support/kbdoc/000190408"
+    ],
+    "summary": "Dell PowerScale OneFS versions 8.2.2 - 9.1.0.x contain a use of get request method with sensitive query strings vulnerability. It can lead to potential disclosure of sensitive data. Dell recommends upgrading at your earliest opportunity.",
+    "vulnerable_configuration": [],
+    "vulnerable_configuration_cpe_2_2": [],
+    "vulnerable_product": []
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "api_sources": [
+    "http://cve.circl.lu/api/last/"
+  ],
+  "rss_sources": [
+    "https://www.fireeye.com/blog/threat-research/_jcr_content.feed"
+  ],
+  "twitter_sources": [
+    "@circl_lu"
+  ]
+}

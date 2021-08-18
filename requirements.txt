@@ -70,3 +70,6 @@ tzlocal==2.1
 urllib3==1.26.6
 Werkzeug==1.0.1
 wrapt==1.12.1
+
+pytest~=6.2.4
+pytest-bdd~=4.1.0
