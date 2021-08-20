@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "Please cite this software if you use it in your work."
+authors:
+- family-names: "Westphal"
+  given-names: "Alexander Michael"
+  orcid: "https://orcid.org/0000-0002-6897-857X"
+- family-names: "Schreck"
+  given-names: "Thomas"
+  orcid: "https://orcid.org/0000-0002-8960-6986"
+title: "YAFRA"
+version: 0.1.1
+date-released: 2021-08-16
+url: "https://github.com/hm-seclab/YAFRA"
