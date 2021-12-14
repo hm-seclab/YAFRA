@@ -32,12 +32,12 @@ markdown-tree-parser==0.1
 MarkupSafe==1.1.1
 mccabe==0.6.1
 mdutils==1.3.0
-nltk==3.6.2
+nltk==3.6.4
 numpy==1.21.2
 oauthlib==3.1.1
 pdfminer==20191125
 pendulum==1.2.5
-Pillow==8.2.0
+Pillow==8.3.2
 pyattck==3.0.1
 pycountry==20.7.3
 pycryptodome==3.10.1
